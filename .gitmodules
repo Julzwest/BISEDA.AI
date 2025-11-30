@@ -1,0 +1,3 @@
+# Empty .gitmodules to prevent submodule errors
+# GitHub Pages was trying to access 'legal-pages' submodule that doesn't exist
+

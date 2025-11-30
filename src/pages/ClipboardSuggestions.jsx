@@ -7,6 +7,7 @@ import { UNIFIED_AI_SYSTEM_PROMPT } from '@/utils/unifiedAIPrompt';
 import UpgradeModal from '@/components/UpgradeModal';
 import CreditsModal from '@/components/CreditsModal';
 import LimitReachedModal from '@/components/LimitReachedModal';
+import { getBackendUrl } from '@/utils/getBackendUrl';
 
 export default function ClipboardSuggestions() {
   const [clipboardText, setClipboardText] = useState('');
@@ -22,7 +23,7 @@ export default function ClipboardSuggestions() {
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [usage, setUsage] = useState(null);
   const fileInputRef = useRef(null);
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+  const backendUrl = getBackendUrl();
 
   // Check usage on mount and periodically
   useEffect(() => {

@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X, Zap, Sparkles } from 'lucide-react';
+import { getBackendUrl } from '@/utils/getBackendUrl';
 
 export default function CreditsModal({ isOpen, onClose }) {
   const [packages, setPackages] = useState(null);
   const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(false);
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+  const backendUrl = getBackendUrl();
   const userId = localStorage.getItem('userId') || 'anonymous';
 
   useEffect(() => {

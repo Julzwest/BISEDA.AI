@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MapPin, Coffee, UtensilsCrossed, Film, Music, Dumbbell, Palette, TreePine, Sparkles, Heart, Star, Crown, TrendingUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { getBackendUrl } from '@/utils/getBackendUrl';
 
 export default function FirstDates() {
   const [selectedCity, setSelectedCity] = useState('');
@@ -9,7 +10,7 @@ export default function FirstDates() {
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
   
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+  const backendUrl = getBackendUrl();
 
   const cities = [
     'Tiranë', 'Durrës', 'Vlorë', 'Shkodër', 'Korçë', 'Elbasan', 'Fier', 'Gjirokastër', 'Berat', 'Kavajë', 'Lezhë', 'Pogradec', 'Sarandë', 'Himara'

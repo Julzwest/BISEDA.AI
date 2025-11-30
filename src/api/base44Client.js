@@ -1,8 +1,10 @@
+import { getBackendUrl } from '@/utils/getBackendUrl';
+
 // API client with OpenAI integration
 
 // OpenAI API call - Uses backend API with OpenAI
 const callOpenAI = async (prompt, conversationHistory = [], customSystemPrompt = null, fileUrls = []) => {
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+  const backendUrl = getBackendUrl();
   
   // Call backend API (uses OpenAI)
   try {

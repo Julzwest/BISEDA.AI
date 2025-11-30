@@ -3,12 +3,13 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Zap, TrendingUp, Image as ImageIcon } from 'lucide-react';
 import CreditsModal from './CreditsModal';
+import { getBackendUrl } from '@/utils/getBackendUrl';
 
 export default function UsageDisplay({ onUpgrade, onLimitReached }) {
   const [usage, setUsage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+  const backendUrl = getBackendUrl();
 
   useEffect(() => {
     fetchUsage();

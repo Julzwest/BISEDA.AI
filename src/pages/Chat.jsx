@@ -9,6 +9,7 @@ import UpgradeModal from '@/components/UpgradeModal';
 import LimitReachedModal from '@/components/LimitReachedModal';
 import CrisisHelplineModal from '@/components/CrisisHelplineModal';
 import { UNIFIED_AI_SYSTEM_PROMPT } from '@/utils/unifiedAIPrompt';
+import { getBackendUrl } from '@/utils/getBackendUrl';
 
 const CATEGORIES = {
   'chat': {
@@ -66,7 +67,7 @@ export default function Chat() {
   const [selectedImages, setSelectedImages] = useState([]);
   const [isLimitReached, setIsLimitReached] = useState(false);
   const [usage, setUsage] = useState(null);
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+  const backendUrl = getBackendUrl();
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
 

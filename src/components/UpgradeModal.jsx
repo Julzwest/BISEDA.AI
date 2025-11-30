@@ -2,6 +2,7 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X, Check, Zap, Sparkles } from 'lucide-react';
+import { getBackendUrl } from '@/utils/getBackendUrl';
 
 export default function UpgradeModal({ isOpen, onClose, onSelectPlan }) {
   if (!isOpen) return null;
@@ -57,7 +58,7 @@ export default function UpgradeModal({ isOpen, onClose, onSelectPlan }) {
 
   const handleSelectPlan = async (plan) => {
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+      const backendUrl = getBackendUrl();
       const response = await fetch(`${backendUrl}/api/stripe/create-checkout-session`, {
         method: 'POST',
         headers: {
