@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Lightbulb, MessageSquare, Heart, Sparkles, TrendingUp, Shield, Upload, Send } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import UpgradeModal from '@/components/UpgradeModal';
+import { getBackendUrl } from '@/utils/getBackendUrl';
 
 export default function Tips() {
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -15,6 +16,9 @@ export default function Tips() {
   const [screenshot, setScreenshot] = useState(null);
   const [conversation, setConversation] = useState([]);
   const [followUpQuestion, setFollowUpQuestion] = useState('');
+  const [isLimitReached, setIsLimitReached] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const backendUrl = getBackendUrl();
 
   const categories = [
     {
