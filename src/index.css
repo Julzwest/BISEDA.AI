@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  height: 100%;
+  height: 100vh;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  background-color: #0f172a;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  height: 100vh;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #0f172a;
+  overscroll-behavior: none;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+#root {
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background-color: #0f172a;
+  position: relative;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Prevent iOS keyboard accessory view */
+textarea,
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="tel"],
+input[type="url"] {
+  -webkit-appearance: none;
+  appearance: none;
+  /* Hide input accessory view on iOS */
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Prevent iOS from showing input accessory bar */
+@supports (-webkit-touch-callout: none) {
+  textarea,
+  input[type="text"],
+  input[type="search"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="url"] {
+    /* Hide the input accessory view */
+    -webkit-appearance: none;
+    appearance: none;
+  }
+}
+
+/* Prevent keyboard from pushing content */
+html,
+body {
+  position: fixed;
+  overflow: hidden;
+  height: 100%;
+  height: 100vh;
+  width: 100%;
+}
+
+/* Ensure textareas don't trigger input accessory */
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
