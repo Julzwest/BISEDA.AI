@@ -154,8 +154,9 @@ ${customQuestion ? `\nPyetje specifike: ${customQuestion}` : ''}`,
       const response = await fetch(`${backendUrl}/api/usage`);
       if (response.ok) {
         const data = await response.json();
-        const isBlocked = (data.dailyUsage.remainingMessages === 0 && (!data.credits || data.credits === 0)) || 
-                         (data.canSendMessage === false);
+        const isBlocked =
+          data.dailyUsage.remainingMessages === 0 &&
+          (!data.credits || data.credits === 0);
         setIsLimitReached(isBlocked);
         return !isBlocked;
       }

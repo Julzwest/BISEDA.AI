@@ -185,9 +185,10 @@ export default function ClipboardSuggestions() {
       if (response.ok) {
         const data = await response.json();
         setUsage(data);
-        // Block if: no remaining messages AND no credits AND backend says can't send
-        const isBlocked = (data.dailyUsage.remainingMessages === 0 && (!data.credits || data.credits === 0)) || 
-                         (data.canSendMessage === false);
+        // Block if: no remaining messages AND no credits
+        const isBlocked =
+          data.dailyUsage.remainingMessages === 0 &&
+          (!data.credits || data.credits === 0);
         setIsLimitReached(isBlocked);
         return !isBlocked;
       }
