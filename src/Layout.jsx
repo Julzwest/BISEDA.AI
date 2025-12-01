@@ -16,7 +16,7 @@ export default function Layout({ children, onLogout }) {
   ];
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white" style={{ height: '100vh', overflow: 'hidden' }}>
+    <div className="flex flex-col h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white" style={{ height: '100vh', height: '100dvh', overflow: 'hidden' }}>
       <style>{`
         :root {
           --primary: #6366f1;
@@ -32,6 +32,22 @@ export default function Layout({ children, onLogout }) {
         .nav-active {
           color: var(--gold);
         }
+        
+        /* Ensure navigation is always visible on mobile */
+        @supports (height: 100dvh) {
+          .mobile-layout {
+            height: 100dvh;
+          }
+        }
+        
+        /* Force bottom navigation to stay at bottom */
+        .bottom-nav {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
       `}</style>
       
       {/* Top Bar with User Profile Link */}
@@ -44,13 +60,13 @@ export default function Layout({ children, onLogout }) {
       </div>
       
       {/* Main Content Area - Takes all available space */}
-      <main className="flex-1 overflow-hidden" style={{ height: '100%', overflow: 'hidden' }}>
+      <main className="flex-1 overflow-hidden" style={{ height: '100%', overflow: 'hidden', paddingBottom: '80px', marginBottom: '-80px' }}>
         {children}
       </main>
 
       {/* Fixed Bottom Navigation */}
-      <nav className="flex-shrink-0 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800 z-50" style={{ height: '70px' }}>
-        <div className={`flex ${navItems.length === 4 ? 'justify-between' : 'justify-around'} items-center h-full px-2`}>
+      <nav className="bottom-nav flex-shrink-0 bg-slate-900/98 backdrop-blur-lg border-t border-slate-800" style={{ height: '80px', minHeight: '80px', zIndex: 9999 }}>
+        <div className={`flex ${navItems.length === 4 ? 'justify-between' : 'justify-around'} items-center h-full px-3`}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentPageName === item.page;
@@ -62,8 +78,8 @@ export default function Layout({ children, onLogout }) {
                   isActive ? 'nav-active' : 'text-slate-300'
                 }`}
               >
-                <Icon className={`w-6 h-6 mb-1 ${isActive ? 'scale-110' : ''} transition-transform`} />
-                <span className="text-xs font-semibold leading-tight whitespace-nowrap">{item.name}</span>
+                <Icon className={`w-7 h-7 mb-1 ${isActive ? 'scale-110' : ''} transition-transform`} />
+                <span className="text-sm font-bold leading-tight whitespace-nowrap">{item.name}</span>
               </Link>
             );
           })}
