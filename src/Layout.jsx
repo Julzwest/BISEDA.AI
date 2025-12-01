@@ -16,7 +16,7 @@ export default function Layout({ children, onLogout }) {
   ];
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white" style={{ height: '100vh', height: '100dvh', overflow: 'hidden' }}>
+    <div className="flex flex-col h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white mobile-layout" style={{ overflow: 'hidden' }}>
       <style>{`
         :root {
           --primary: #6366f1;
@@ -33,11 +33,10 @@ export default function Layout({ children, onLogout }) {
           color: var(--gold);
         }
         
-        /* Ensure navigation is always visible on mobile */
-        @supports (height: 100dvh) {
-          .mobile-layout {
-            height: 100dvh;
-          }
+        /* Ensure layout uses dynamic viewport on mobile */
+        .mobile-layout {
+          height: 100vh;
+          height: 100dvh; /* Dynamic viewport height for mobile browsers */
         }
         
         /* Force bottom navigation to stay at bottom */
@@ -46,7 +45,8 @@ export default function Layout({ children, onLogout }) {
           bottom: 0;
           left: 0;
           right: 0;
-          padding-bottom: env(safe-area-inset-bottom, 0px);
+          padding-bottom: max(env(safe-area-inset-bottom, 0px), 10px);
+          box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.5);
         }
       `}</style>
       
