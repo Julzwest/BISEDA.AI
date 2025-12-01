@@ -68,9 +68,14 @@
     <circle cx="120" cy="120" r="8" fill="white"/>
   </g>
   
-  <!-- Text: Biseda.ai -->
-  <text x="200" y="120" font-family="Arial, sans-serif" font-size="64" font-weight="bold" fill="url(#textGradient)">
-    Biseda<tspan fill="url(#aiGradient)">.ai</tspan>
+  <!-- Text: Biseda -->
+  <text x="200" y="100" font-family="Arial, sans-serif" font-size="64" font-weight="bold" fill="url(#textGradient)">
+    Biseda
+  </text>
+  
+  <!-- Text: .ai -->
+  <text x="200" y="160" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="url(#aiGradient)">
+    .ai
   </text>
 </svg>
 
