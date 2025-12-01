@@ -46,60 +46,79 @@ export default function GiftSuggestions() {
 Rasti: ${occasionText}
 Buxheti: ${budgetText}
 
-Gjeneroni 5 dhurata specifike dhe unike. Ktheni VETËM një JSON array:
-[{"name":"Emri","description":"Përshkrimi","price":"€X-Y","category":"Kategoria","rating":"4.5"}]
+IMPORTANT: Return ONLY a valid JSON array. No other text.
 
-Mos shtoni tekst tjetër, VETËM JSON.`;
+Format (exactly like this):
+[{"name":"Gift Name","description":"Short description","price":"€10-20","category":"Category","rating":"4.5"}]
+
+Generate 5 unique gift ideas.`;
 
       // Call the AI API
       const response = await base44.integrations.Core.InvokeLLM({ 
         prompt,
         conversationHistory: [],
-        systemPrompt: "Return ONLY a JSON array, nothing else. No explanations, no markdown, just the JSON array."
+        systemPrompt: "You are a JSON generator. Return ONLY valid JSON arrays. Never include explanations, markdown, or any text outside the JSON. Escape all special characters properly. Keep descriptions short and simple."
       });
 
       console.log('🎁 AI Raw Response:', response);
-      setDebugInfo('AI Response: ' + (typeof response === 'string' ? response.substring(0, 100) : JSON.stringify(response).substring(0, 100)));
+      setDebugInfo('Parsing AI response...');
 
-      // Parse the response - try multiple strategies
+      // Parse the response - try multiple strategies with fixes
       let aiSuggestions = [];
       let usedFallback = false;
+      
       try {
-        // Strategy 1: Try to parse the whole response as JSON
-        try {
-          aiSuggestions = JSON.parse(response);
-          console.log('✅ Parsed as direct JSON');
-          setDebugInfo('✅ Using Real AI suggestions!');
-        } catch (e1) {
-          // Strategy 2: Extract JSON array from response
-          const jsonMatch = response.match(/\[\s*\{[\s\S]*\}\s*\]/);
-          if (jsonMatch) {
-            aiSuggestions = JSON.parse(jsonMatch[0]);
-            console.log('✅ Extracted JSON from text');
-            setDebugInfo('✅ Using Real AI suggestions (extracted)!');
-          } else {
-            // Strategy 3: Remove markdown code blocks and try again
-            const cleanedResponse = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-            aiSuggestions = JSON.parse(cleanedResponse);
-            console.log('✅ Parsed after removing markdown');
-            setDebugInfo('✅ Using Real AI suggestions (cleaned)!');
-          }
+        // Clean the response first
+        let cleanedResponse = response.trim();
+        
+        // Remove markdown code blocks if present
+        cleanedResponse = cleanedResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        
+        // Try to extract just the JSON array
+        const jsonMatch = cleanedResponse.match(/\[\s*\{[\s\S]*\}\s*\]/);
+        if (jsonMatch) {
+          cleanedResponse = jsonMatch[0];
         }
-
+        
+        // Fix common JSON issues
+        // 1. Fix unescaped quotes in descriptions
+        cleanedResponse = cleanedResponse
+          .replace(/description"\s*:\s*"([^"]*?)"/g, (match, content) => {
+            // Escape any internal quotes in the description
+            const escaped = content.replace(/(?<!\\)"/g, '\\"');
+            return `description":"${escaped}"`;
+          })
+          .replace(/name"\s*:\s*"([^"]*?)"/g, (match, content) => {
+            // Escape any internal quotes in the name
+            const escaped = content.replace(/(?<!\\)"/g, '\\"');
+            return `name":"${escaped}"`;
+          });
+        
+        // 2. Remove any trailing commas before closing braces
+        cleanedResponse = cleanedResponse.replace(/,(\s*[}\]])/g, '$1');
+        
+        console.log('🧹 Cleaned response:', cleanedResponse.substring(0, 200) + '...');
+        
+        // Try to parse
+        aiSuggestions = JSON.parse(cleanedResponse);
+        
         // Validate
         if (!Array.isArray(aiSuggestions) || aiSuggestions.length === 0) {
-          throw new Error('Invalid response format');
+          throw new Error('Invalid response format - not an array or empty');
         }
-
-        console.log('🎁 Parsed AI suggestions:', aiSuggestions.length, 'items');
+        
+        console.log('✅ Successfully parsed', aiSuggestions.length, 'AI suggestions');
+        setDebugInfo('✅ Using Real AI suggestions!');
+        
       } catch (parseError) {
-        console.error('❌ Failed to parse AI response:', parseError);
-        console.error('Raw response:', response);
-        // Fallback to mock suggestions if parsing fails
+        console.error('❌ Failed to parse AI response:', parseError.message);
+        console.error('Raw response:', response.substring(0, 500));
+        
+        // Fallback to mock suggestions
         aiSuggestions = generateMockSuggestions(partnerInterests, occasion, budget);
         usedFallback = true;
         console.log('⚠️ Using fallback mock data');
-        setDebugInfo('⚠️ Using fallback data (AI parsing failed): ' + parseError.message);
+        setDebugInfo('⚠️ Using fallback data - AI returned invalid JSON');
       }
 
       // Add IDs and affiliate links
