@@ -1,16 +1,25 @@
 import React, { useState } from 'react';
-import { Gift, Heart, Sparkles, ShoppingBag, Star, TrendingUp, ExternalLink } from 'lucide-react';
+import { Gift, Heart, Sparkles, ShoppingBag, Star, TrendingUp, ExternalLink, MapPin, Store } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
 
 export default function GiftSuggestions() {
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://biseda-ai.onrender.com';
+  
   const [partnerInterests, setPartnerInterests] = useState('');
   const [occasion, setOccasion] = useState('');
   const [budget, setBudget] = useState('');
+  const [selectedCity, setSelectedCity] = useState('');
   const [suggestions, setSuggestions] = useState([]);
+  const [localShops, setLocalShops] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingShops, setIsLoadingShops] = useState(false);
   const [debugInfo, setDebugInfo] = useState('');
+
+  const cities = [
+    'Tiranë', 'Durrës', 'Vlorë', 'Shkodër', 'Korçë', 'Elbasan', 'Fier', 'Gjirokastër', 'Berat'
+  ];
 
   const occasions = [
     { id: 'birthday', name: 'Ditëlindje', icon: '🎂' },
@@ -36,6 +45,11 @@ export default function GiftSuggestions() {
 
     setIsLoading(true);
     setSuggestions([]);
+    
+    // If city is selected, also search for local shops
+    if (selectedCity) {
+      searchLocalShops();
+    }
 
     try {
       // Create a simpler, more direct prompt for OpenAI
@@ -175,6 +189,60 @@ RULES:
       setSuggestions(mockSuggestions);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const searchLocalShops = async () => {
+    if (!selectedCity) return;
+    
+    setIsLoadingShops(true);
+    setLocalShops([]);
+
+    try {
+      console.log('🏪 Searching for local shops in', selectedCity);
+      
+      // Search for gift-related shops based on interests
+      const shopQuery = `gift shops jewelry stores flower shops boutiques bookstores ${partnerInterests || ''}`;
+
+      const response = await fetch(`${backendUrl}/api/places/search`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: shopQuery,
+          location: selectedCity,
+          category: 'gifts'
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.source === 'google-places' && data.places && data.places.length > 0) {
+          console.log('✅ Found', data.places.length, 'local shops');
+          
+          const formattedShops = data.places.map((shop, index) => ({
+            id: index + 1,
+            name: shop.name,
+            description: shop.description,
+            location: shop.location,
+            rating: shop.rating,
+            price: shop.price,
+            googleMapsLink: shop.googleMapsLink,
+            isOpen: shop.isOpen,
+            source: 'google'
+          }));
+          
+          setLocalShops(formattedShops);
+        } else {
+          console.log('⚠️ No local shops found or Google Places not available');
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error searching local shops:', error);
+    } finally {
+      setIsLoadingShops(false);
     }
   };
 
@@ -318,6 +386,35 @@ RULES:
         </div>
       </div>
 
+      {/* City Selection (Optional - for local shops) */}
+      <div className="mb-6">
+        <label className="block text-sm font-semibold text-white mb-3 flex items-center gap-2">
+          <MapPin className="w-4 h-4 text-cyan-400" />
+          Qyteti (opsionale - për dyqane lokale)
+        </label>
+        <div className="flex flex-wrap gap-2">
+          {cities.map((city) => (
+            <button
+              key={city}
+              onClick={() => setSelectedCity(selectedCity === city ? '' : city)}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                selectedCity === city
+                  ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/30 scale-105'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
+              }`}
+            >
+              {city}
+            </button>
+          ))}
+        </div>
+        {selectedCity && (
+          <p className="text-xs text-cyan-400 mt-2 flex items-center gap-1">
+            <Store className="w-3 h-3" />
+            Do të shfaqen edhe dyqane lokale në {selectedCity}
+          </p>
+        )}
+      </div>
+
       {/* Generate Button */}
       <div className="mb-6">
         <Button
@@ -417,6 +514,84 @@ RULES:
           <div className="text-6xl mb-3">🎁</div>
           <p className="text-slate-400 text-sm mb-2">Shkruani interesat e partnerit dhe zgjidhni rastin</p>
           <p className="text-slate-500 text-xs">AI do të gjenerojë sugjerime perfekte për dhuratë</p>
+        </div>
+      )}
+
+      {/* Local Shops Section */}
+      {selectedCity && localShops.length > 0 && (
+        <div className="mb-6 mt-8">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent"></div>
+            <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <Store className="w-5 h-5 text-cyan-400" />
+              Dyqane Lokale në {selectedCity}
+            </h2>
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent"></div>
+          </div>
+
+          <div className="space-y-3">
+            {localShops.map((shop, index) => (
+              <Card
+                key={index}
+                className="bg-gradient-to-br from-cyan-900/30 to-blue-900/30 border-2 border-cyan-500/30 backdrop-blur-sm hover:scale-[1.02] transition-all"
+              >
+                <div className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center shrink-0">
+                      <Store className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <h3 className="text-white font-bold">{shop.name}</h3>
+                        <span className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg text-xs font-bold text-white">
+                          <MapPin className="w-3 h-3" />
+                          Verified
+                        </span>
+                        {shop.rating && (
+                          <div className="flex items-center gap-1">
+                            <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                            <span className="text-xs text-slate-300">{shop.rating}</span>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-slate-300 text-sm mb-2">{shop.description}</p>
+                      <div className="flex items-center gap-2 flex-wrap mb-3">
+                        {shop.price && (
+                          <span className="text-xs font-semibold px-2 py-1 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/50">
+                            {shop.price}
+                          </span>
+                        )}
+                        {shop.location && (
+                          <span className="text-xs text-slate-400">
+                            📍 {shop.location}
+                          </span>
+                        )}
+                      </div>
+                      {shop.googleMapsLink && (
+                        <a
+                          href={shop.googleMapsLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/50 rounded-lg text-xs font-semibold text-cyan-300 transition-all"
+                        >
+                          <MapPin className="w-3 h-3" />
+                          Shiko në Google Maps
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Loading Local Shops */}
+      {isLoadingShops && selectedCity && (
+        <div className="text-center py-6 mb-6">
+          <div className="inline-block w-6 h-6 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-slate-400 mt-3 text-sm">Duke kërkuar dyqane lokale në {selectedCity}...</p>
         </div>
       )}
 
