@@ -10,6 +10,7 @@ import { getUser, saveUser } from './models/User.js';
 import stripeRoutes from './routes/stripe.js';
 import businessRoutes from './routes/businesses.js';
 import creditRoutes from './routes/credits.js';
+import { searchPlaces } from './utils/googlePlaces.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -90,6 +91,60 @@ app.use('/api/credits', creditRoutes);
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Google Places search endpoint
+app.post('/api/places/search', rateLimit, async (req, res) => {
+  try {
+    const { query, location, category } = req.body;
+    
+    if (!query || !location) {
+      return res.status(400).json({ error: 'Query and location are required' });
+    }
+    
+    const googleApiKey = process.env.GOOGLE_PLACES_API_KEY;
+    
+    if (!googleApiKey || googleApiKey.trim() === '') {
+      console.log('⚠️ Google Places API key not configured, falling back to AI');
+      return res.json({ 
+        places: [],
+        source: 'fallback',
+        message: 'Google Places API not configured'
+      });
+    }
+    
+    // Build search query based on category
+    const categoryQueries = {
+      'restaurants': 'restaurants',
+      'cafes': 'cafes coffee shops',
+      'bars': 'bars nightlife',
+      'cinema': 'movie theaters cinemas',
+      'music': 'live music venues',
+      'activities': 'entertainment activities bowling escape rooms',
+      'culture': 'museums art galleries',
+      'nature': 'parks nature'
+    };
+    
+    const searchQuery = categoryQueries[category] || query;
+    
+    console.log(`🔍 Searching Google Places: ${searchQuery} in ${location}`);
+    
+    const places = await searchPlaces(searchQuery, location, googleApiKey);
+    
+    res.json({
+      places: places,
+      source: 'google-places',
+      count: places.length
+    });
+    
+  } catch (error) {
+    console.error('❌ Places search error:', error);
+    res.status(500).json({ 
+      error: 'Failed to search places',
+      message: error.message,
+      source: 'error'
+    });
+  }
 });
 
 // Get user usage stats
