@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Gift, Heart, Sparkles, ShoppingBag, Star, TrendingUp, ExternalLink } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { base44 } from '@/api/base44Client';
 
 export default function GiftSuggestions() {
   const [partnerInterests, setPartnerInterests] = useState('');
@@ -36,23 +37,71 @@ export default function GiftSuggestions() {
     setSuggestions([]);
 
     try {
-      // Simulate AI-generated gift suggestions
-      // In production, this would call your AI API
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Create the prompt for OpenAI
+      const prompt = `Ju lutem gjeneroni 5 sugjerime dhuratash bazuar në:
+- Interesat: ${partnerInterests}
+- Rasti: ${occasion || 'Çdo rast'}
+- Buxheti: ${budget || 'Fleksibël'}
 
-      const mockSuggestions = generateMockSuggestions(partnerInterests, occasion, budget);
-      setSuggestions(mockSuggestions);
+Për çdo dhuratë, jepni:
+1. Emër të dhuratës
+2. Përshkrim të shkurtër (1-2 fjali)
+3. Çmim të përafërt në Euro (format: €X-Y)
+4. Kategori (p.sh. "Electronics", "Fashion", "Books", etj.)
+5. Vlerësim (rating) nga 4.0 deri 5.0
+
+Ju lutem ktheni përgjigjen në JSON format si më poshtë:
+[
+  {
+    "name": "Emër Dhurate",
+    "description": "Përshkrim",
+    "price": "€X-Y",
+    "category": "Kategoria",
+    "rating": "4.5"
+  }
+]`;
+
+      // Call the AI API
+      const response = await base44.integrations.Core.InvokeLLM({ 
+        prompt,
+        conversationHistory: [],
+        systemPrompt: "Ti je një asistent ekspert për sugjerime dhuratash. Jep përgjigje VETËM në formatin JSON të kërkuar, pa shpjegime shtesë."
+      });
+
+      // Parse the response
+      let aiSuggestions = [];
+      try {
+        // Try to find JSON in the response
+        const jsonMatch = response.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          aiSuggestions = JSON.parse(jsonMatch[0]);
+        } else {
+          // If no JSON found, try parsing the whole response
+          aiSuggestions = JSON.parse(response);
+        }
+      } catch (parseError) {
+        console.error('Failed to parse AI response as JSON, using fallback:', parseError);
+        // Fallback to mock suggestions if parsing fails
+        aiSuggestions = generateMockSuggestions(partnerInterests, occasion, budget);
+      }
+
+      // Add IDs and affiliate links
+      const suggestionsWithIds = aiSuggestions.slice(0, 5).map((suggestion, index) => ({
+        id: index + 1,
+        name: suggestion.name || 'Dhuratë',
+        description: suggestion.description || 'Përshkrim i dhuratës',
+        price: suggestion.price || '€50-100',
+        category: suggestion.category || 'General',
+        rating: suggestion.rating || '4.5',
+        affiliateLink: `https://www.amazon.com/s?k=${encodeURIComponent(suggestion.name || partnerInterests)}`
+      }));
+
+      setSuggestions(suggestionsWithIds);
     } catch (error) {
       console.error('Error generating suggestions:', error);
-      setSuggestions([{
-        id: 1,
-        name: 'Gabim',
-        description: 'Na vjen keq, ka ndodhur një gabim. Provo përsëri.',
-        price: '',
-        category: '',
-        affiliateLink: '',
-        image: ''
-      }]);
+      // Fallback to mock suggestions on error
+      const mockSuggestions = generateMockSuggestions(partnerInterests, occasion, budget);
+      setSuggestions(mockSuggestions);
     } finally {
       setIsLoading(false);
     }
