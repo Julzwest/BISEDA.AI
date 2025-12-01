@@ -87,7 +87,7 @@ export default function Home() {
 
 
   return (
-    <div className="h-full overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div>
       {/* Welcome Screen */}
       {showWelcome && (
         <WelcomeScreen onContinue={handleWelcomeContinue} />

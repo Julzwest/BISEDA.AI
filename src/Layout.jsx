@@ -16,7 +16,7 @@ export default function Layout({ children, onLogout }) {
   ];
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white mobile-layout">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white">
       <style>{`
         :root {
           --primary: #6366f1;
@@ -33,17 +33,11 @@ export default function Layout({ children, onLogout }) {
           color: var(--gold);
         }
         
-        /* Ensure layout uses dynamic viewport on mobile */
-        .mobile-layout {
-          height: 100vh;
-          height: 100dvh; /* Dynamic viewport height for mobile browsers */
-          position: relative;
-        }
-        
         /* Smooth scrolling for all pages */
         main {
           -webkit-overflow-scrolling: touch;
           scroll-behavior: smooth;
+          min-height: 100vh;
         }
         
         /* Force bottom navigation to stay at bottom */
@@ -54,6 +48,7 @@ export default function Layout({ children, onLogout }) {
           right: 0;
           padding-bottom: max(env(safe-area-inset-bottom, 0px), 10px);
           box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.5);
+          z-index: 9999;
         }
       `}</style>
       
@@ -67,12 +62,12 @@ export default function Layout({ children, onLogout }) {
       </div>
       
       {/* Main Content Area - Takes all available space */}
-      <main className="flex-1" style={{ height: 'calc(100% - 80px)', overflow: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' }}>
+      <main style={{ paddingBottom: '100px' }}>
         {children}
       </main>
 
       {/* Fixed Bottom Navigation */}
-      <nav className="bottom-nav flex-shrink-0 bg-slate-900/98 backdrop-blur-lg border-t border-slate-800" style={{ height: '80px', minHeight: '80px', zIndex: 9999 }}>
+      <nav className="bottom-nav bg-slate-900/98 backdrop-blur-lg border-t border-slate-800" style={{ height: '80px', minHeight: '80px' }}>
         <div className={`flex ${navItems.length === 4 ? 'justify-between' : 'justify-around'} items-center h-full px-3`}>
           {navItems.map((item) => {
             const Icon = item.icon;
