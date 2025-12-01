@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import { copyFileSync } from 'fs';
+import { copyFileSync, existsSync, mkdirSync } from 'fs';
 
 export default defineConfig({
   plugins: [
@@ -9,6 +9,10 @@ export default defineConfig({
     {
       name: 'copy-404',
       closeBundle() {
+        // Create dist directory if it doesn't exist
+        if (!existsSync('dist')) {
+          mkdirSync('dist', { recursive: true });
+        }
         // Copy 404.html to dist after build
         copyFileSync('public/404.html', 'dist/404.html');
       }

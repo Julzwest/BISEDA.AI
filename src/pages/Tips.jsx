@@ -278,20 +278,19 @@ Përgjigju në shqip duke u bazuar në kontekstin e mëparshëm. Jep këshilla t
                 {categories.map((category) => {
                   const Icon = category.icon;
                   return (
-                    <Card
+                    <button
                       key={category.id}
                       onClick={() => handleCategoryClick(category)}
-                      className="bg-slate-800/50 border-slate-700 backdrop-blur-sm hover:bg-slate-800/70 transition-all cursor-pointer active:scale-95"
+                      className="bg-slate-800/50 border border-slate-700 rounded-xl backdrop-blur-sm hover:bg-slate-800/70 transition-all cursor-pointer active:scale-95 p-4 text-left touch-manipulation"
+                      style={{ pointerEvents: 'auto' }}
                     >
-                      <div className="p-4">
-                        <div className={`w-12 h-12 bg-gradient-to-br ${category.color} rounded-xl flex items-center justify-center mb-3`}>
-                          <Icon className="w-6 h-6 text-white" />
-                        </div>
-                        <h3 className="font-semibold text-white text-sm">
-                          {category.title}
-                        </h3>
+                      <div className={`w-12 h-12 bg-gradient-to-br ${category.color} rounded-xl flex items-center justify-center mb-3`}>
+                        <Icon className="w-6 h-6 text-white" />
                       </div>
-                    </Card>
+                      <h3 className="font-semibold text-white text-sm">
+                        {category.title}
+                      </h3>
+                    </button>
                   );
                 })}
               </div>
@@ -538,6 +537,12 @@ Përgjigju në shqip duke u bazuar në kontekstin e mëparshëm. Jep këshilla t
           </div>
         )}
       </div>
+
+      {/* Modals */}
+      <UpgradeModal 
+        isOpen={showUpgradeModal} 
+        onClose={() => setShowUpgradeModal(false)} 
+      />
     </div>
   );
 }
