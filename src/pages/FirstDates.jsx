@@ -3,6 +3,7 @@ import { MapPin, Coffee, UtensilsCrossed, Film, Music, Dumbbell, Palette, TreePi
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { getBackendUrl } from '@/utils/getBackendUrl';
+import { base44 } from '@/api/base44Client';
 
 export default function FirstDates() {
   const [selectedCity, setSelectedCity] = useState('');
@@ -205,21 +206,105 @@ export default function FirstDates() {
     return generic[category] || [];
   };
 
-  const handleCategorySelect = (category) => {
+  const handleCategorySelect = async (category) => {
     setSelectedCategory(category);
     if (selectedCity) {
-      getSuggestions(selectedCity, category.id);
-    } else {
-      // Show generic suggestions
-      const genericSuggestions = getGenericSuggestions(category.id);
-      setSuggestions(genericSuggestions);
+      await generateAISuggestions(selectedCity, category);
     }
   };
 
-  const handleCitySelect = (city) => {
+  const handleCitySelect = async (city) => {
     setSelectedCity(city);
     if (selectedCategory) {
-      getSuggestions(city, selectedCategory.id);
+      await generateAISuggestions(city, selectedCategory);
+    }
+  };
+
+  const generateAISuggestions = async (city, category) => {
+    setLoading(true);
+    setSuggestions([]);
+
+    try {
+      // Create the prompt for OpenAI to generate REAL local businesses
+      const categoryNames = {
+        restaurants: 'restorante romantike',
+        cafes: 'kafene të bukura',
+        bars: 'bare dhe rooftop bar',
+        cinema: 'kinema dhe aktivitete kinematografike',
+        music: 'vende me muzikë live',
+        activities: 'aktivitete si bowling, escape room',
+        culture: 'muzee, galeri arti',
+        nature: 'parqe dhe vende në natyrë'
+      };
+
+      const prompt = `Ju lutem listoni 5-7 biznese REALE në ${city}, Shqipëri që janë ideale për takime të para në kategorinë: ${categoryNames[category.id] || category.name}.
+
+Për çdo biznes, jepni:
+1. Emër të biznesit (emër real që ekziston në ${city})
+2. Përshkrim të shkurtër (1-2 fjali)
+3. Adresë ose zonë në ${city}
+4. Vlerësim (rating) nga 4.0 deri 5.0
+5. Çmim ($ për lirë, $$ për mesatar, $$$ për shtrenjtë)
+
+Ju lutem ktheni përgjigjen në JSON format si më poshtë:
+[
+  {
+    "name": "Emër Biznesi",
+    "description": "Përshkrim",
+    "location": "Adresa ose zona",
+    "rating": "4.5",
+    "price": "$$"
+  }
+]
+
+RËNDËSI: Jepni VETËM biznese që ekzistojnë realisht në ${city}, Shqipëri!`;
+
+      // Call the AI API
+      const response = await base44.integrations.Core.InvokeLLM({ 
+        prompt,
+        conversationHistory: [],
+        systemPrompt: "Ti je një ekspert lokal për ${city}, Shqipëri. Jep përgjigje VETËM në formatin JSON të kërkuar, pa shpjegime shtesë. Listo VETËM biznese që ekzistojnë realisht."
+      });
+
+      // Parse the response
+      let aiSuggestions = [];
+      try {
+        // Try to find JSON in the response
+        const jsonMatch = response.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          aiSuggestions = JSON.parse(jsonMatch[0]);
+        } else {
+          // If no JSON found, try parsing the whole response
+          aiSuggestions = JSON.parse(response);
+        }
+      } catch (parseError) {
+        console.error('Failed to parse AI response as JSON, using fallback:', parseError);
+        // Fallback to hardcoded suggestions if parsing fails
+        const fallback = getSuggestions(city, category.id);
+        setSuggestions(fallback);
+        setLoading(false);
+        return;
+      }
+
+      // Format the suggestions
+      const formattedSuggestions = aiSuggestions.map((suggestion, index) => ({
+        name: suggestion.name || 'Biznes Lokal',
+        description: suggestion.description || 'Vend i mirë për takim të parë',
+        location: suggestion.location || city,
+        rating: suggestion.rating || '4.5',
+        price: suggestion.price || '$$',
+        featured: index === 0, // Mark first as featured
+        sponsored: false
+      }));
+
+      setSuggestions(formattedSuggestions);
+    } catch (error) {
+      console.error('Error generating AI suggestions:', error);
+      // Fallback to hardcoded suggestions on error
+      const fallbackSuggestions = getSuggestions(city, category.id);
+      setSuggestions(fallbackSuggestions);
+    } finally {
+      setLoading(false);
     }
   };
 
