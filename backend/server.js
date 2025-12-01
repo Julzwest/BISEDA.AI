@@ -26,6 +26,11 @@ app.use(cors({
   origin: [
     process.env.FRONTEND_URL || 'http://localhost:5173',
     'http://localhost:5173',
+    'https://bisedaai.com',
+    'http://bisedaai.com',
+    'https://www.bisedaai.com',
+    'http://www.bisedaai.com',
+    'https://julzwest.github.io',
     'capacitor://localhost',
     'ionic://localhost',
     'http://localhost',
