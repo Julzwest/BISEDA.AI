@@ -65,37 +65,58 @@ Ju lutem ktheni përgjigjen në JSON format si më poshtë:
       const response = await base44.integrations.Core.InvokeLLM({ 
         prompt,
         conversationHistory: [],
-        systemPrompt: "Ti je një asistent ekspert për sugjerime dhuratash. Jep përgjigje VETËM në formatin JSON të kërkuar, pa shpjegime shtesë."
+        systemPrompt: "Ti je një asistent ekspert për sugjerime dhuratash. Jep përgjigje VETËM në formatin JSON array të kërkuar, pa asnjë tekst shtesë përpara ose pas."
       });
 
-      // Parse the response
+      console.log('🎁 AI Raw Response:', response);
+
+      // Parse the response - try multiple strategies
       let aiSuggestions = [];
       try {
-        // Try to find JSON in the response
-        const jsonMatch = response.match(/\[[\s\S]*\]/);
-        if (jsonMatch) {
-          aiSuggestions = JSON.parse(jsonMatch[0]);
-        } else {
-          // If no JSON found, try parsing the whole response
+        // Strategy 1: Try to parse the whole response as JSON
+        try {
           aiSuggestions = JSON.parse(response);
+          console.log('✅ Parsed as direct JSON');
+        } catch (e1) {
+          // Strategy 2: Extract JSON array from response
+          const jsonMatch = response.match(/\[\s*\{[\s\S]*\}\s*\]/);
+          if (jsonMatch) {
+            aiSuggestions = JSON.parse(jsonMatch[0]);
+            console.log('✅ Extracted JSON from text');
+          } else {
+            // Strategy 3: Remove markdown code blocks and try again
+            const cleanedResponse = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+            aiSuggestions = JSON.parse(cleanedResponse);
+            console.log('✅ Parsed after removing markdown');
+          }
         }
+
+        // Validate
+        if (!Array.isArray(aiSuggestions) || aiSuggestions.length === 0) {
+          throw new Error('Invalid response format');
+        }
+
+        console.log('🎁 Parsed AI suggestions:', aiSuggestions.length, 'items');
       } catch (parseError) {
-        console.error('Failed to parse AI response as JSON, using fallback:', parseError);
+        console.error('❌ Failed to parse AI response:', parseError);
+        console.error('Raw response:', response);
         // Fallback to mock suggestions if parsing fails
         aiSuggestions = generateMockSuggestions(partnerInterests, occasion, budget);
+        console.log('⚠️ Using fallback mock data');
       }
 
       // Add IDs and affiliate links
       const suggestionsWithIds = aiSuggestions.slice(0, 5).map((suggestion, index) => ({
         id: index + 1,
-        name: suggestion.name || 'Dhuratë',
+        name: suggestion.name || suggestion.title || 'Dhuratë',
         description: suggestion.description || 'Përshkrim i dhuratës',
         price: suggestion.price || '€50-100',
         category: suggestion.category || 'General',
-        rating: suggestion.rating || '4.5',
-        affiliateLink: `https://www.amazon.com/s?k=${encodeURIComponent(suggestion.name || partnerInterests)}`
+        rating: String(suggestion.rating || '4.5'),
+        affiliateLink: `https://www.amazon.com/s?k=${encodeURIComponent(suggestion.name || suggestion.title || partnerInterests)}`
       }));
 
+      console.log('🎁 Final suggestions to display:', suggestionsWithIds);
       setSuggestions(suggestionsWithIds);
     } catch (error) {
       console.error('Error generating suggestions:', error);
