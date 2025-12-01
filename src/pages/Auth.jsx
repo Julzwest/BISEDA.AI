@@ -118,7 +118,7 @@ export default function Auth({ onAuthSuccess }) {
   };
 
   return (
-    <div className="min-h-screen overflow-y-auto p-6 bg-gradient-to-b from-slate-950 via-purple-950/20 to-slate-950" style={{ WebkitOverflowScrolling: 'touch', paddingTop: '40px', paddingBottom: '40px' }}>
+    <div className="p-6 py-12 bg-gradient-to-b from-slate-950 via-purple-950/20 to-slate-950">
       <div className="w-full max-w-md mx-auto">
         {/* Logo/Header */}
         <div className="text-center mb-8">

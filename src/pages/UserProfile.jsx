@@ -82,7 +82,7 @@ export default function UserProfile({ onLogout }) {
 
   if (loading) {
     return (
-      <div className="h-full flex items-center justify-center bg-gradient-to-b from-slate-950 via-purple-950/20 to-slate-950">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-950 via-purple-950/20 to-slate-950">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-400">Duke ngarkuar profilin...</p>
@@ -95,7 +95,7 @@ export default function UserProfile({ onLogout }) {
   const TierIcon = tierBadge.icon;
 
   return (
-    <div className="h-full overflow-y-auto px-6 pt-20 pb-24 bg-gradient-to-b from-slate-950 via-purple-950/20 to-slate-950">
+    <div className="px-6 pt-20 pb-32 bg-gradient-to-b from-slate-950 via-purple-950/20 to-slate-950">
       {/* Header */}
       <div className="text-center mb-6">
         <div className="w-24 h-24 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl shadow-purple-500/50">

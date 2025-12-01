@@ -323,7 +323,7 @@ RULES:
   };
 
   return (
-    <div className="h-full overflow-y-auto px-6 pt-20 pb-24 bg-gradient-to-b from-slate-950 via-purple-950/20 to-slate-950">
+    <div className="px-6 pt-20 pb-32 bg-gradient-to-b from-slate-950 via-purple-950/20 to-slate-950">
       {/* Header */}
       <div className="mb-6 text-center">
         <div className="inline-block mb-3">

@@ -130,7 +130,7 @@ export default function Admin() {
   // Login Screen
   if (!isAuthenticated) {
     return (
-      <div className="h-full overflow-y-auto px-6 pt-20 pb-24 bg-gradient-to-b from-slate-950 via-purple-950/20 to-slate-950">
+      <div className="px-6 pt-20 pb-32 bg-gradient-to-b from-slate-950 via-purple-950/20 to-slate-950">
         <div className="max-w-md mx-auto mt-20">
           <Card className="bg-slate-800/80 border-purple-500/50 backdrop-blur-sm p-8">
             <div className="text-center mb-6">
@@ -215,7 +215,7 @@ export default function Admin() {
 
   // Dashboard Screen
   return (
-    <div className="h-full overflow-y-auto px-6 pt-20 pb-24 bg-gradient-to-b from-slate-950 via-purple-950/20 to-slate-950">
+    <div className="px-6 pt-20 pb-32 bg-gradient-to-b from-slate-950 via-purple-950/20 to-slate-950">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>

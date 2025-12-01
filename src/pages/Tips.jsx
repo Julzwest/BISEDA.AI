@@ -253,7 +253,7 @@ Përgjigju në shqip duke u bazuar në kontekstin e mëparshëm. Jep këshilla t
   };
 
   return (
-    <div className="h-screen overflow-y-auto px-6 pt-20 pb-20">
+    <div className="px-6 pt-20 pb-32">
       {/* Header - Now scrolls with content */}
       <div className="pt-6 pb-4">
         <div className="flex items-center gap-3">

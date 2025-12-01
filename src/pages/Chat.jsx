@@ -385,7 +385,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden px-6 pt-20 pb-20">
+    <div className="flex flex-col px-6 pt-20 pb-32" style={{ minHeight: '100vh' }}>
       <div className="text-center mb-6" style={{ position: 'relative', zIndex: 20 }}>
         <div className="flex items-center justify-between mb-2">
           <div className="flex-1"></div>
