@@ -249,7 +249,11 @@ export default function FirstDates() {
         nature: 'parqe dhe vende në natyrë'
       };
 
-      const prompt = `Biznese REALE në ${city}, Shqipëri për takime të para: ${categoryNames[category.id] || category.name}
+      // Build list of already shown businesses to avoid duplicates
+      const alreadyShown = isLoadMore ? suggestions.map(s => s.name).join(', ') : '';
+      const excludeText = alreadyShown ? `\n\nMOS përfshi këto biznese që u treguan më parë: ${alreadyShown}\n\nGjej biznese të REJA dhe të ndryshme!` : '';
+      
+      const prompt = `Biznese REALE në ${city}, Shqipëri për takime të para: ${categoryNames[category.id] || category.name}${excludeText}
 
 Listoni 5-7 vende që ekzistojnë realisht. Ktheni VETËM JSON array:
 [{"name":"Emri","description":"Përshkrim","location":"Adresa","rating":"4.5","price":"$$"}]
@@ -257,10 +261,11 @@ Listoni 5-7 vende që ekzistojnë realisht. Ktheni VETËM JSON array:
 Mos shtoni tekst tjetër, VETËM JSON.`;
 
       // Call the AI API
+      const systemPromptExtra = isLoadMore ? ' Generate DIFFERENT businesses than before. Do NOT repeat any business names that were already mentioned.' : '';
       const response = await base44.integrations.Core.InvokeLLM({ 
         prompt,
         conversationHistory: [],
-        systemPrompt: `Ti njeh ${city}, Shqipëri shumë mirë. Return ONLY a JSON array of REAL businesses that exist in ${city}. No explanations, no markdown, just the JSON array.`
+        systemPrompt: `Ti njeh ${city}, Shqipëri shumë mirë. Return ONLY a JSON array of REAL businesses that exist in ${city}. No explanations, no markdown, just the JSON array.${systemPromptExtra}`
       });
 
       // Parse the response
