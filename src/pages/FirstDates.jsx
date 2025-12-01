@@ -5,14 +5,14 @@ import { Button } from '@/components/ui/button';
 import { getBackendUrl } from '@/utils/getBackendUrl';
 import { base44 } from '@/api/base44Client';
 
+const backendUrl = getBackendUrl();
+
 export default function FirstDates() {
   const [selectedCity, setSelectedCity] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  
-  const backendUrl = getBackendUrl();
 
   const cities = [
     'Tiranë', 'Durrës', 'Vlorë', 'Shkodër', 'Korçë', 'Elbasan', 'Fier', 'Gjirokastër', 'Berat', 'Kavajë', 'Lezhë', 'Pogradec', 'Sarandë', 'Himara'
@@ -237,7 +237,9 @@ export default function FirstDates() {
     }
 
     try {
-      // Create the prompt for OpenAI to generate REAL local businesses
+      // Step 1: Try Google Places API first for REAL-TIME data
+      console.log(`🔍 Searching Google Places for ${category.name} in ${city}...`);
+      
       const categoryNames = {
         restaurants: 'restorante romantike',
         cafes: 'kafene të bukura',
@@ -248,7 +250,80 @@ export default function FirstDates() {
         culture: 'muzee, galeri arti',
         nature: 'parqe dhe vende në natyrë'
       };
-
+      
+      let googlePlaces = [];
+      let useGooglePlaces = true;
+      
+      try {
+        const placesResponse = await fetch(`${backendUrl}/api/places/search`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            query: categoryNames[category.id] || category.name,
+            location: city,
+            category: category.id
+          })
+        });
+        
+        if (placesResponse.ok) {
+          const data = await placesResponse.json();
+          
+          if (data.source === 'google-places' && data.places && data.places.length > 0) {
+            console.log(`✅ Got ${data.places.length} results from Google Places`);
+            googlePlaces = data.places;
+            
+            // Filter out already shown businesses if loading more
+            if (isLoadMore) {
+              const existingNames = suggestions.map(s => s.name.toLowerCase());
+              googlePlaces = googlePlaces.filter(p => 
+                !existingNames.includes(p.name.toLowerCase())
+              );
+            }
+            
+          } else {
+            console.log('⚠️ Google Places not available, falling back to AI');
+            useGooglePlaces = false;
+          }
+        } else {
+          console.log('⚠️ Google Places API error, falling back to AI');
+          useGooglePlaces = false;
+        }
+      } catch (googleError) {
+        console.error('❌ Google Places fetch error:', googleError);
+        useGooglePlaces = false;
+      }
+      
+      // If we got Google Places results, use them
+      if (useGooglePlaces && googlePlaces.length > 0) {
+        const formattedSuggestions = googlePlaces.map((place, index) => ({
+          name: place.name,
+          description: place.description,
+          location: place.location,
+          rating: place.rating,
+          price: place.price,
+          googleMapsLink: place.googleMapsLink,
+          isOpen: place.isOpen,
+          featured: index === 0 && !isLoadMore,
+          sponsored: false,
+          source: 'google'
+        }));
+        
+        if (isLoadMore) {
+          setSuggestions(prev => [...prev, ...formattedSuggestions]);
+        } else {
+          setSuggestions(formattedSuggestions);
+        }
+        
+        setLoading(false);
+        setLoadingMore(false);
+        return;
+      }
+      
+      // Step 2: Fallback to AI if Google Places is not available
+      console.log('📝 Using AI fallback...');
+      
       // Build list of already shown businesses to avoid duplicates
       const alreadyShown = isLoadMore ? suggestions.map(s => s.name).join(', ') : '';
       const excludeText = alreadyShown ? `\n\nMOS përfshi këto biznese që u treguan më parë: ${alreadyShown}\n\nGjej biznese të REJA dhe të ndryshme!` : '';
@@ -295,8 +370,10 @@ Mos shtoni tekst tjetër, VETËM JSON.`;
         location: suggestion.location || city,
         rating: suggestion.rating || '4.5',
         price: suggestion.price || '$$',
+        googleMapsLink: `https://maps.google.com/?q=${encodeURIComponent(suggestion.name || 'Biznes')},${encodeURIComponent(city)},Albania`,
         featured: index === 0 && !isLoadMore, // Mark first as featured only on initial load
-        sponsored: false
+        sponsored: false,
+        source: 'ai'
       }));
 
       // Append or replace suggestions based on isLoadMore
@@ -498,6 +575,12 @@ Mos shtoni tekst tjetër, VETËM JSON.`;
                               Featured
                             </span>
                           )}
+                          {suggestion.source === 'google' && (
+                            <span className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg text-xs font-bold text-white">
+                              <MapPin className="w-3 h-3" />
+                              Verified
+                            </span>
+                          )}
                           {suggestion.rating && (
                             <div className="flex items-center gap-1">
                               <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
@@ -506,8 +589,8 @@ Mos shtoni tekst tjetër, VETËM JSON.`;
                           )}
                         </div>
                         <p className="text-slate-300 text-sm mb-2">{suggestion.description}</p>
-                        {suggestion.price && (
-                          <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {suggestion.price && (
                             <span className={`text-xs font-semibold px-2 py-1 rounded ${
                               suggestion.price === 'Gratis' 
                                 ? 'bg-green-500/20 text-green-300 border border-green-500/50'
@@ -519,7 +602,23 @@ Mos shtoni tekst tjetër, VETËM JSON.`;
                             }`}>
                               {suggestion.price}
                             </span>
-                          </div>
+                          )}
+                          {suggestion.location && (
+                            <span className="text-xs text-slate-400">
+                              📍 {suggestion.location}
+                            </span>
+                          )}
+                        </div>
+                        {suggestion.googleMapsLink && (
+                          <a
+                            href={suggestion.googleMapsLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 mt-3 px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 rounded-lg text-xs font-semibold text-blue-300 transition-all"
+                          >
+                            <MapPin className="w-3 h-3" />
+                            Shiko në Google Maps
+                          </a>
                         )}
                       </div>
                     </div>
