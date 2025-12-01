@@ -16,7 +16,7 @@ export default function Layout({ children, onLogout }) {
   ];
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white mobile-layout" style={{ overflow: 'hidden' }}>
+    <div className="flex flex-col h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white mobile-layout">
       <style>{`
         :root {
           --primary: #6366f1;
@@ -37,6 +37,13 @@ export default function Layout({ children, onLogout }) {
         .mobile-layout {
           height: 100vh;
           height: 100dvh; /* Dynamic viewport height for mobile browsers */
+          position: relative;
+        }
+        
+        /* Smooth scrolling for all pages */
+        main {
+          -webkit-overflow-scrolling: touch;
+          scroll-behavior: smooth;
         }
         
         /* Force bottom navigation to stay at bottom */
@@ -60,7 +67,7 @@ export default function Layout({ children, onLogout }) {
       </div>
       
       {/* Main Content Area - Takes all available space */}
-      <main className="flex-1 overflow-hidden" style={{ height: '100%', overflow: 'hidden', paddingBottom: '80px', marginBottom: '-80px' }}>
+      <main className="flex-1" style={{ height: 'calc(100% - 80px)', overflow: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' }}>
         {children}
       </main>
 
