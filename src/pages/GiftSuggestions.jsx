@@ -38,35 +38,24 @@ export default function GiftSuggestions() {
     setSuggestions([]);
 
     try {
-      // Create the prompt for OpenAI
-      const prompt = `Ju lutem gjeneroni 5 sugjerime dhuratash bazuar në:
-- Interesat: ${partnerInterests}
-- Rasti: ${occasion || 'Çdo rast'}
-- Buxheti: ${budget || 'Fleksibël'}
+      // Create a simpler, more direct prompt for OpenAI
+      const budgetText = budget === 'low' ? '€10-30' : budget === 'medium' ? '€30-100' : budget === 'high' ? '€100-300' : budget === 'premium' ? '€300+' : 'çdo buxhet';
+      const occasionText = occasions.find(o => o.id === occasion)?.name || 'çdo rast';
+      
+      const prompt = `Sugjerime dhuratash për dikë që i pëlqen: ${partnerInterests}
+Rasti: ${occasionText}
+Buxheti: ${budgetText}
 
-Për çdo dhuratë, jepni:
-1. Emër të dhuratës
-2. Përshkrim të shkurtër (1-2 fjali)
-3. Çmim të përafërt në Euro (format: €X-Y)
-4. Kategori (p.sh. "Electronics", "Fashion", "Books", etj.)
-5. Vlerësim (rating) nga 4.0 deri 5.0
+Gjeneroni 5 dhurata specifike dhe unike. Ktheni VETËM një JSON array:
+[{"name":"Emri","description":"Përshkrimi","price":"€X-Y","category":"Kategoria","rating":"4.5"}]
 
-Ju lutem ktheni përgjigjen në JSON format si më poshtë:
-[
-  {
-    "name": "Emër Dhurate",
-    "description": "Përshkrim",
-    "price": "€X-Y",
-    "category": "Kategoria",
-    "rating": "4.5"
-  }
-]`;
+Mos shtoni tekst tjetër, VETËM JSON.`;
 
       // Call the AI API
       const response = await base44.integrations.Core.InvokeLLM({ 
         prompt,
         conversationHistory: [],
-        systemPrompt: "Ti je një asistent ekspert për sugjerime dhuratash. Jep përgjigje VETËM në formatin JSON array të kërkuar, pa asnjë tekst shtesë përpara ose pas."
+        systemPrompt: "Return ONLY a JSON array, nothing else. No explanations, no markdown, just the JSON array."
       });
 
       console.log('🎁 AI Raw Response:', response);
