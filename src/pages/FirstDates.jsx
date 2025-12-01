@@ -237,33 +237,18 @@ export default function FirstDates() {
         nature: 'parqe dhe vende në natyrë'
       };
 
-      const prompt = `Ju lutem listoni 5-7 biznese REALE në ${city}, Shqipëri që janë ideale për takime të para në kategorinë: ${categoryNames[category.id] || category.name}.
+      const prompt = `Biznese REALE në ${city}, Shqipëri për takime të para: ${categoryNames[category.id] || category.name}
 
-Për çdo biznes, jepni:
-1. Emër të biznesit (emër real që ekziston në ${city})
-2. Përshkrim të shkurtër (1-2 fjali)
-3. Adresë ose zonë në ${city}
-4. Vlerësim (rating) nga 4.0 deri 5.0
-5. Çmim ($ për lirë, $$ për mesatar, $$$ për shtrenjtë)
+Listoni 5-7 vende që ekzistojnë realisht. Ktheni VETËM JSON array:
+[{"name":"Emri","description":"Përshkrim","location":"Adresa","rating":"4.5","price":"$$"}]
 
-Ju lutem ktheni përgjigjen në JSON format si më poshtë:
-[
-  {
-    "name": "Emër Biznesi",
-    "description": "Përshkrim",
-    "location": "Adresa ose zona",
-    "rating": "4.5",
-    "price": "$$"
-  }
-]
-
-RËNDËSI: Jepni VETËM biznese që ekzistojnë realisht në ${city}, Shqipëri!`;
+Mos shtoni tekst tjetër, VETËM JSON.`;
 
       // Call the AI API
       const response = await base44.integrations.Core.InvokeLLM({ 
         prompt,
         conversationHistory: [],
-        systemPrompt: "Ti je një ekspert lokal për ${city}, Shqipëri. Jep përgjigje VETËM në formatin JSON të kërkuar, pa shpjegime shtesë. Listo VETËM biznese që ekzistojnë realisht."
+        systemPrompt: `Ti njeh ${city}, Shqipëri shumë mirë. Return ONLY a JSON array of REAL businesses that exist in ${city}. No explanations, no markdown, just the JSON array.`
       });
 
       // Parse the response
