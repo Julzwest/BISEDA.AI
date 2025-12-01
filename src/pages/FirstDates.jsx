@@ -206,18 +206,20 @@ export default function FirstDates() {
     return generic[category] || [];
   };
 
-  const handleCategorySelect = async (category) => {
+  const handleCategorySelect = (category) => {
     setSelectedCategory(category);
-    if (selectedCity) {
-      await generateAISuggestions(selectedCity, category);
-    }
   };
 
-  const handleCitySelect = async (city) => {
+  const handleCitySelect = (city) => {
     setSelectedCity(city);
-    if (selectedCategory) {
-      await generateAISuggestions(city, selectedCategory);
+  };
+
+  const handleSearch = async () => {
+    if (!selectedCity || !selectedCategory) {
+      alert('Ju lutem zgjidhni qytetin dhe kategorinë!');
+      return;
     }
+    await generateAISuggestions(selectedCity, selectedCategory);
   };
 
   const generateAISuggestions = async (city, category) => {
@@ -373,6 +375,46 @@ Mos shtoni tekst tjetër, VETËM JSON.`;
             );
           })}
         </div>
+      </div>
+
+      {/* Search Button */}
+      <div className="mb-6">
+        <Button
+          onClick={handleSearch}
+          disabled={!selectedCity || !selectedCategory || loading}
+          className={`w-full py-6 rounded-2xl font-bold text-lg transition-all ${
+            selectedCity && selectedCategory && !loading
+              ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 text-white shadow-2xl shadow-pink-500/50 hover:scale-[1.02] active:scale-95'
+              : 'bg-slate-700/50 text-slate-400 cursor-not-allowed'
+          }`}
+        >
+          {loading ? (
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              <span>Duke gjeneruar...</span>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center gap-2">
+              <Sparkles className="w-5 h-5" />
+              <span>Gjenero Sugjerime</span>
+            </div>
+          )}
+        </Button>
+        {!selectedCity && !selectedCategory && (
+          <p className="text-center text-slate-400 text-sm mt-3">
+            👆 Zgjidhni qytetin dhe kategorinë më sipër
+          </p>
+        )}
+        {selectedCity && !selectedCategory && (
+          <p className="text-center text-pink-400 text-sm mt-3 animate-pulse">
+            ✨ Tani zgjidhni një kategori!
+          </p>
+        )}
+        {!selectedCity && selectedCategory && (
+          <p className="text-center text-pink-400 text-sm mt-3 animate-pulse">
+            📍 Tani zgjidhni një qytet!
+          </p>
+        )}
       </div>
 
       {/* Suggestions */}
