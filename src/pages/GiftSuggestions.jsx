@@ -10,6 +10,7 @@ export default function GiftSuggestions() {
   const [budget, setBudget] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [debugInfo, setDebugInfo] = useState('');
 
   const occasions = [
     { id: 'birthday', name: 'Ditëlindje', icon: '🎂' },
@@ -69,25 +70,30 @@ Ju lutem ktheni përgjigjen në JSON format si më poshtë:
       });
 
       console.log('🎁 AI Raw Response:', response);
+      setDebugInfo('AI Response: ' + (typeof response === 'string' ? response.substring(0, 100) : JSON.stringify(response).substring(0, 100)));
 
       // Parse the response - try multiple strategies
       let aiSuggestions = [];
+      let usedFallback = false;
       try {
         // Strategy 1: Try to parse the whole response as JSON
         try {
           aiSuggestions = JSON.parse(response);
           console.log('✅ Parsed as direct JSON');
+          setDebugInfo('✅ Using Real AI suggestions!');
         } catch (e1) {
           // Strategy 2: Extract JSON array from response
           const jsonMatch = response.match(/\[\s*\{[\s\S]*\}\s*\]/);
           if (jsonMatch) {
             aiSuggestions = JSON.parse(jsonMatch[0]);
             console.log('✅ Extracted JSON from text');
+            setDebugInfo('✅ Using Real AI suggestions (extracted)!');
           } else {
             // Strategy 3: Remove markdown code blocks and try again
             const cleanedResponse = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
             aiSuggestions = JSON.parse(cleanedResponse);
             console.log('✅ Parsed after removing markdown');
+            setDebugInfo('✅ Using Real AI suggestions (cleaned)!');
           }
         }
 
@@ -102,7 +108,9 @@ Ju lutem ktheni përgjigjen në JSON format si më poshtë:
         console.error('Raw response:', response);
         // Fallback to mock suggestions if parsing fails
         aiSuggestions = generateMockSuggestions(partnerInterests, occasion, budget);
+        usedFallback = true;
         console.log('⚠️ Using fallback mock data');
+        setDebugInfo('⚠️ Using fallback data (AI parsing failed): ' + parseError.message);
       }
 
       // Add IDs and affiliate links
@@ -201,6 +209,11 @@ Ju lutem ktheni përgjigjen në JSON format si më poshtë:
           Sugjerime Dhuratash 🎁
         </h1>
         <p className="text-slate-400 text-sm">Gjej dhuratën perfekte bazuar në interesat e partnerit</p>
+        {debugInfo && (
+          <div className="mt-3 p-2 bg-blue-500/20 border border-blue-500/50 rounded-lg">
+            <p className="text-blue-300 text-xs font-mono">{debugInfo}</p>
+          </div>
+        )}
       </div>
 
       {/* Partner Interests Input */}
