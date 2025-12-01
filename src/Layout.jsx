@@ -43,7 +43,7 @@ export default function Layout({ children, onLogout }) {
       </div>
       
       {/* Main Content - Normal flow, no restrictions */}
-      <div style={{ paddingBottom: '100px', minHeight: '100vh' }}>
+      <div style={{ paddingBottom: '90px' }}>
         {children}
       </div>
 
