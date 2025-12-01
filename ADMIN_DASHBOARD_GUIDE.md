@@ -13,8 +13,9 @@ Your admin dashboard is now **LIVE** and ready to use!
 https://bisedaai.com/#/admin
 ```
 
-### **Default Login:**
-- **Password:** `biseda2024admin`
+### **Admin Credentials:**
+- **Username:** `EMILIOBABUSH`
+- **Password:** `Servetbena56@`
 
 ---
 
@@ -68,16 +69,16 @@ Complete list of every user with:
 - Token stored in browser localStorage
 - Must re-login if localStorage is cleared
 
-### **Change Admin Password**
+### **Change Admin Credentials**
 1. Go to **Render Dashboard** → Your Backend Service
 2. Go to **Environment** tab
-3. Add/Update variable:
-   - **Key:** `ADMIN_PASSWORD`
-   - **Value:** `your-new-secure-password`
+3. Add/Update variables:
+   - **Key:** `ADMIN_USERNAME` → **Value:** `your-new-username`
+   - **Key:** `ADMIN_PASSWORD` → **Value:** `your-new-password`
 4. Click **Save Changes**
 5. Backend will auto-redeploy (takes ~2 minutes)
 
-**⚠️ Important:** After changing the password, you'll need to log out and log back in with the new password.
+**⚠️ Important:** After changing credentials, you'll need to log out and log back in with the new username and password.
 
 ---
 
@@ -88,8 +89,8 @@ Your backend now has these admin endpoints:
 ### **1. Authentication**
 ```
 POST /api/admin/auth
-Body: { "password": "your-password" }
-Response: { "success": true, "token": "..." }
+Body: { "username": "EMILIOBABUSH", "password": "Servetbena56@" }
+Response: { "success": true, "token": "...", "username": "EMILIOBABUSH" }
 ```
 
 ### **2. Get Stats**
