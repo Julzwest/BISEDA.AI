@@ -193,20 +193,6 @@ export default function Admin() {
               </Button>
             </form>
 
-            <div className="mt-6 p-3 bg-slate-900/50 border border-slate-700 rounded-lg">
-              <p className="text-xs text-slate-400 text-center">
-                💡 Admin Credentials
-              </p>
-              <p className="text-xs text-slate-500 text-center mt-1">
-                Username: <code className="text-purple-400">EMILIOBABUSH</code>
-              </p>
-              <p className="text-xs text-slate-500 text-center">
-                Password: <code className="text-purple-400">Servetbena56@</code>
-              </p>
-              <p className="text-xs text-slate-500 text-center mt-2">
-                Set ADMIN_USERNAME & ADMIN_PASSWORD in Render to change
-              </p>
-            </div>
           </Card>
         </div>
       </div>
