@@ -118,8 +118,8 @@ export default function Auth({ onAuthSuccess }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-b from-slate-950 via-purple-950/20 to-slate-950">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen overflow-y-auto p-6 bg-gradient-to-b from-slate-950 via-purple-950/20 to-slate-950" style={{ WebkitOverflowScrolling: 'touch', paddingTop: '40px', paddingBottom: '40px' }}>
+      <div className="w-full max-w-md mx-auto">
         {/* Logo/Header */}
         <div className="text-center mb-8">
           <div className="inline-block mb-4">
