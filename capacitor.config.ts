@@ -5,6 +5,10 @@ const config = {
   server: {
     androidScheme: 'https'
   },
+  ios: {
+    contentInset: 'automatic',
+    scrollEnabled: true
+  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
@@ -15,6 +19,10 @@ const config = {
       showSpinner: false,
       splashFullScreen: true,
       splashImmersive: true
+    },
+    Keyboard: {
+      resize: 'body',
+      resizeOnFullScreen: true
     }
   }
 };

@@ -79,6 +79,6 @@ export default function Layout({ children, onLogout }) {
           })}
         </div>
       </nav>
-    </div>
+    </>
   );
 }
