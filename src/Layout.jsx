@@ -40,7 +40,7 @@ export default function Layout({ children }) {
       </main>
 
       {/* Fixed Bottom Navigation */}
-      <nav className="flex-shrink-0 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800 z-50" style={{ height: '64px' }}>
+      <nav className="flex-shrink-0 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800 z-50" style={{ height: '70px' }}>
         <div className={`flex ${navItems.length === 4 ? 'justify-between' : 'justify-around'} items-center h-full px-2`}>
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -50,11 +50,11 @@ export default function Layout({ children }) {
                 key={item.page}
                 to={createPageUrl(item.page)}
                 className={`flex flex-col items-center justify-center w-full h-full transition-colors ${
-                  isActive ? 'nav-active' : 'text-slate-400'
+                  isActive ? 'nav-active' : 'text-slate-300'
                 }`}
               >
-                <Icon className={`w-5 h-5 ${navItems.length >= 4 ? 'mb-0.5' : 'mb-1'} ${isActive ? 'scale-110' : ''} transition-transform`} />
-                <span className={`${navItems.length >= 4 ? 'text-[10px]' : 'text-xs'} font-medium leading-tight`}>{item.name}</span>
+                <Icon className={`w-6 h-6 mb-1 ${isActive ? 'scale-110' : ''} transition-transform`} />
+                <span className="text-xs font-semibold leading-tight whitespace-nowrap">{item.name}</span>
               </Link>
             );
           })}
