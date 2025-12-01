@@ -10,6 +10,7 @@ import GiftSuggestions from './pages/GiftSuggestions.jsx';
 import FestiveDates from './pages/FestiveDates.jsx';
 import SubscriptionSuccess from './pages/SubscriptionSuccess.jsx';
 import SubscriptionCancel from './pages/SubscriptionCancel.jsx';
+import Admin from './pages/Admin.jsx';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
           <Route path="/chat" element={<Chat />} />
           <Route path="/subscription/success" element={<SubscriptionSuccess />} />
           <Route path="/subscription/cancel" element={<SubscriptionCancel />} />
+          <Route path="/admin" element={<Admin />} />
         </Routes>
       </Layout>
     </Router>

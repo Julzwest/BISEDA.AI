@@ -582,6 +582,183 @@ app.post('/api/transcribe', rateLimit, async (req, res) => {
   }
 });
 
+// ==========================================
+// ADMIN ENDPOINTS
+// ==========================================
+
+// Simple admin authentication middleware
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'biseda2024admin';
+
+function checkAdminAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized - No token provided' });
+  }
+  
+  const token = authHeader.substring(7);
+  
+  if (token !== ADMIN_PASSWORD) {
+    return res.status(403).json({ error: 'Forbidden - Invalid admin password' });
+  }
+  
+  next();
+}
+
+// Admin auth check endpoint
+app.post('/api/admin/auth', (req, res) => {
+  const { password } = req.body;
+  
+  if (password === ADMIN_PASSWORD) {
+    res.json({ 
+      success: true, 
+      token: ADMIN_PASSWORD,
+      message: 'Authentication successful' 
+    });
+  } else {
+    res.status(401).json({ 
+      success: false, 
+      error: 'Invalid password' 
+    });
+  }
+});
+
+// Get all users and admin stats
+app.get('/api/admin/stats', checkAdminAuth, (req, res) => {
+  try {
+    const allUsers = Array.from(users.values());
+    
+    // Calculate overall stats
+    const totalUsers = allUsers.length;
+    const activeToday = allUsers.filter(u => {
+      const today = new Date().toDateString();
+      return u.lastActiveAt && new Date(u.lastActiveAt).toDateString() === today;
+    }).length;
+    
+    const activeThisWeek = allUsers.filter(u => {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return u.lastActiveAt && new Date(u.lastActiveAt) >= weekAgo;
+    }).length;
+    
+    // Subscription breakdown
+    const subscriptionStats = {
+      free: allUsers.filter(u => u.subscriptionTier === 'free').length,
+      starter: allUsers.filter(u => u.subscriptionTier === 'starter').length,
+      pro: allUsers.filter(u => u.subscriptionTier === 'pro').length,
+      premium: allUsers.filter(u => u.subscriptionTier === 'premium').length
+    };
+    
+    // Revenue calculation (rough estimate)
+    const monthlyRevenue = 
+      (subscriptionStats.starter * 7.99) + 
+      (subscriptionStats.pro * 14.99) + 
+      (subscriptionStats.premium * 24.99);
+    
+    // Total messages and costs
+    let totalMessages = 0;
+    let totalCost = 0;
+    let totalCreditsBalance = 0;
+    
+    allUsers.forEach(u => {
+      totalMessages += u.monthlyUsage.totalMessages || 0;
+      totalCost += u.costTracking.totalSpent || 0;
+      totalCreditsBalance += u.credits || 0;
+    });
+    
+    // Top users by usage
+    const topUsers = allUsers
+      .sort((a, b) => (b.monthlyUsage.totalMessages || 0) - (a.monthlyUsage.totalMessages || 0))
+      .slice(0, 10)
+      .map(u => ({
+        userId: u.userId,
+        tier: u.subscriptionTier,
+        messages: u.monthlyUsage.totalMessages || 0,
+        cost: u.costTracking.totalSpent || 0
+      }));
+    
+    res.json({
+      overview: {
+        totalUsers,
+        activeToday,
+        activeThisWeek,
+        totalMessages,
+        totalCost: totalCost.toFixed(4),
+        monthlyRevenue: monthlyRevenue.toFixed(2),
+        profit: (monthlyRevenue - totalCost).toFixed(2),
+        totalCreditsBalance
+      },
+      subscriptions: subscriptionStats,
+      topUsers,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Admin stats error:', error);
+    res.status(500).json({ error: 'Failed to fetch admin stats' });
+  }
+});
+
+// Get all users list
+app.get('/api/admin/users', checkAdminAuth, (req, res) => {
+  try {
+    const allUsers = Array.from(users.values());
+    
+    const usersList = allUsers.map(u => ({
+      userId: u.userId,
+      subscriptionTier: u.subscriptionTier,
+      subscriptionStatus: u.subscriptionStatus,
+      subscriptionExpiresAt: u.subscriptionExpiresAt,
+      createdAt: u.createdAt,
+      lastActiveAt: u.lastActiveAt,
+      dailyUsage: u.dailyUsage,
+      monthlyUsage: u.monthlyUsage,
+      costTracking: u.costTracking,
+      credits: u.credits || 0,
+      isBlocked: u.isBlocked || false,
+      securityStrikes: u.securityStrikes || 0,
+      stripeCustomerId: u.stripeCustomerId
+    }));
+    
+    // Sort by last active (most recent first)
+    usersList.sort((a, b) => new Date(b.lastActiveAt) - new Date(a.lastActiveAt));
+    
+    res.json({
+      users: usersList,
+      total: usersList.length,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Admin users list error:', error);
+    res.status(500).json({ error: 'Failed to fetch users list' });
+  }
+});
+
+// Block/Unblock user
+app.post('/api/admin/users/:userId/block', checkAdminAuth, (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { blocked } = req.body;
+    
+    const user = users.get(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    user.isBlocked = blocked;
+    saveUser(user);
+    
+    res.json({
+      success: true,
+      userId,
+      isBlocked: user.isBlocked,
+      message: blocked ? 'User blocked' : 'User unblocked'
+    });
+  } catch (error) {
+    console.error('Block user error:', error);
+    res.status(500).json({ error: 'Failed to update user status' });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Backend server running on http://localhost:${PORT}`);
