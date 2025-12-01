@@ -42,83 +42,117 @@ export default function GiftSuggestions() {
       const budgetText = budget === 'low' ? '€10-30' : budget === 'medium' ? '€30-100' : budget === 'high' ? '€100-300' : budget === 'premium' ? '€300+' : 'çdo buxhet';
       const occasionText = occasions.find(o => o.id === occasion)?.name || 'çdo rast';
       
-      const prompt = `Sugjerime dhuratash për dikë që i pëlqen: ${partnerInterests}
-Rasti: ${occasionText}
-Buxheti: ${budgetText}
+      const prompt = `Gift ideas for someone who likes: ${partnerInterests}
+Occasion: ${occasionText}
+Budget: ${budgetText}
 
-IMPORTANT: Return ONLY a valid JSON array. No other text.
+Return a simple JSON array with 5 gift ideas. Use this EXACT format:
+[
+{"name":"Gift 1","description":"Simple description","price":"€10-20","category":"Books","rating":"4.5"},
+{"name":"Gift 2","description":"Simple description","price":"€20-30","category":"Tech","rating":"4.6"}
+]
 
-Format (exactly like this):
-[{"name":"Gift Name","description":"Short description","price":"€10-20","category":"Category","rating":"4.5"}]
-
-Generate 5 unique gift ideas.`;
+RULES:
+- Use ONLY simple descriptions (no quotes, no special chars)
+- Keep it short
+- Return ONLY the JSON array, nothing else`;
 
       // Call the AI API
       const response = await base44.integrations.Core.InvokeLLM({ 
         prompt,
         conversationHistory: [],
-        systemPrompt: "You are a JSON generator. Return ONLY valid JSON arrays. Never include explanations, markdown, or any text outside the JSON. Escape all special characters properly. Keep descriptions short and simple."
+        systemPrompt: "Return ONLY a JSON array. No markdown. No explanations. Use simple English words in descriptions. Avoid quotes and special characters."
       });
 
       console.log('🎁 AI Raw Response:', response);
+      console.log('Response type:', typeof response);
+      console.log('Response length:', response?.length);
       setDebugInfo('Parsing AI response...');
 
-      // Parse the response - try multiple strategies with fixes
+      // Parse the response - EXTREME cleaning
       let aiSuggestions = [];
       let usedFallback = false;
       
       try {
-        // Clean the response first
-        let cleanedResponse = response.trim();
+        let cleanedResponse = String(response).trim();
         
-        // Remove markdown code blocks if present
-        cleanedResponse = cleanedResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        // Log original
+        console.log('📝 Original response first 300 chars:', cleanedResponse.substring(0, 300));
         
-        // Try to extract just the JSON array
-        const jsonMatch = cleanedResponse.match(/\[\s*\{[\s\S]*\}\s*\]/);
-        if (jsonMatch) {
-          cleanedResponse = jsonMatch[0];
+        // Step 1: Remove markdown
+        cleanedResponse = cleanedResponse.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+        
+        // Step 2: Extract JSON array (greedy match)
+        const arrayMatch = cleanedResponse.match(/\[[\s\S]*\]/);
+        if (arrayMatch) {
+          cleanedResponse = arrayMatch[0];
+          console.log('✂️ Extracted array');
         }
         
-        // Fix common JSON issues
-        // 1. Fix unescaped quotes in descriptions
-        cleanedResponse = cleanedResponse
-          .replace(/description"\s*:\s*"([^"]*?)"/g, (match, content) => {
-            // Escape any internal quotes in the description
-            const escaped = content.replace(/(?<!\\)"/g, '\\"');
-            return `description":"${escaped}"`;
-          })
-          .replace(/name"\s*:\s*"([^"]*?)"/g, (match, content) => {
-            // Escape any internal quotes in the name
-            const escaped = content.replace(/(?<!\\)"/g, '\\"');
-            return `name":"${escaped}"`;
-          });
+        // Step 3: Fix newlines and weird whitespace
+        cleanedResponse = cleanedResponse.replace(/\n/g, ' ').replace(/\r/g, '').replace(/\t/g, ' ');
         
-        // 2. Remove any trailing commas before closing braces
+        // Step 4: Fix quotes - AGGRESSIVE
+        // Replace smart quotes with regular quotes
+        cleanedResponse = cleanedResponse.replace(/[""]/g, '"').replace(/['']/g, "'");
+        
+        // Step 5: Fix common issues with string values
+        // Find all string values and clean them
+        cleanedResponse = cleanedResponse.replace(/"([^"\\]*(\\.[^"\\]*)*)"/g, (match) => {
+          // Keep the outer quotes, clean the inside
+          let inner = match.substring(1, match.length - 1);
+          // Remove any stray quotes that aren't escaped
+          inner = inner.replace(/(?<!\\)"/g, '');
+          return `"${inner}"`;
+        });
+        
+        // Step 6: Remove trailing commas
         cleanedResponse = cleanedResponse.replace(/,(\s*[}\]])/g, '$1');
         
-        console.log('🧹 Cleaned response:', cleanedResponse.substring(0, 200) + '...');
+        // Step 7: Ensure proper spacing
+        cleanedResponse = cleanedResponse.replace(/\s+/g, ' ');
+        
+        console.log('🧹 Cleaned response first 300 chars:', cleanedResponse.substring(0, 300));
         
         // Try to parse
-        aiSuggestions = JSON.parse(cleanedResponse);
+        try {
+          aiSuggestions = JSON.parse(cleanedResponse);
+          console.log('✅ Parsed successfully!');
+        } catch (e) {
+          // Last resort: try to manually extract objects
+          console.log('⚠️ JSON.parse failed, trying manual extraction...');
+          const objPattern = /\{[^{}]*"name"[^{}]*\}/g;
+          const matches = cleanedResponse.match(objPattern);
+          if (matches && matches.length > 0) {
+            aiSuggestions = matches.map(m => {
+              try {
+                return JSON.parse(m);
+              } catch {
+                return null;
+              }
+            }).filter(x => x !== null);
+            console.log('✅ Manually extracted', aiSuggestions.length, 'objects');
+          } else {
+            throw e;
+          }
+        }
         
         // Validate
         if (!Array.isArray(aiSuggestions) || aiSuggestions.length === 0) {
-          throw new Error('Invalid response format - not an array or empty');
+          throw new Error('No valid suggestions found');
         }
         
-        console.log('✅ Successfully parsed', aiSuggestions.length, 'AI suggestions');
-        setDebugInfo('✅ Using Real AI suggestions!');
+        console.log('✅ Final count:', aiSuggestions.length, 'suggestions');
+        setDebugInfo(`✅ Using Real AI suggestions! (${aiSuggestions.length} items)`);
         
       } catch (parseError) {
-        console.error('❌ Failed to parse AI response:', parseError.message);
-        console.error('Raw response:', response.substring(0, 500));
+        console.error('❌ All parsing attempts failed:', parseError.message);
+        console.error('📄 Full raw response:', response);
         
-        // Fallback to mock suggestions
+        // Fallback
         aiSuggestions = generateMockSuggestions(partnerInterests, occasion, budget);
         usedFallback = true;
-        console.log('⚠️ Using fallback mock data');
-        setDebugInfo('⚠️ Using fallback data - AI returned invalid JSON');
+        setDebugInfo('⚠️ AI parsing failed - using fallback. Check console for details.');
       }
 
       // Add IDs and affiliate links
