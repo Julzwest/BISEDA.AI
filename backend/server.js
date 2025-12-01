@@ -747,6 +747,122 @@ app.get('/api/auth/me', (req, res) => {
 });
 
 // ==========================================
+// USER SAVED ITEMS ENDPOINTS
+// ==========================================
+
+// In-memory storage for saved items (per user)
+const userSavedItems = new Map();
+
+// Get user's saved items
+app.get('/api/user/saved', (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const savedItems = userSavedItems.get(userId) || {
+      dates: [],
+      gifts: [],
+      tips: []
+    };
+    
+    res.json({
+      success: true,
+      savedItems,
+      totalSaved: savedItems.dates.length + savedItems.gifts.length + savedItems.tips.length
+    });
+  } catch (error) {
+    console.error('Get saved items error:', error);
+    res.status(500).json({ error: 'Failed to get saved items' });
+  }
+});
+
+// Save an item
+app.post('/api/user/saved', (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const { type, item } = req.body; // type: 'date', 'gift', or 'tip'
+    
+    if (!type || !item) {
+      return res.status(400).json({ error: 'Type and item are required' });
+    }
+    
+    // Get or create saved items for user
+    let savedItems = userSavedItems.get(userId) || {
+      dates: [],
+      gifts: [],
+      tips: []
+    };
+    
+    // Add item with timestamp and unique ID
+    const savedItem = {
+      ...item,
+      savedAt: new Date().toISOString(),
+      savedId: `${type}-${Date.now()}-${Math.random().toString(36).substring(7)}`
+    };
+    
+    // Add to appropriate category
+    if (type === 'date') {
+      savedItems.dates.unshift(savedItem); // Add to beginning
+    } else if (type === 'gift') {
+      savedItems.gifts.unshift(savedItem);
+    } else if (type === 'tip') {
+      savedItems.tips.unshift(savedItem);
+    } else {
+      return res.status(400).json({ error: 'Invalid type' });
+    }
+    
+    userSavedItems.set(userId, savedItems);
+    
+    console.log(`✅ User ${userId} saved ${type}:`, item.name || item.title);
+    
+    res.json({
+      success: true,
+      savedItem,
+      totalSaved: savedItems.dates.length + savedItems.gifts.length + savedItems.tips.length
+    });
+  } catch (error) {
+    console.error('Save item error:', error);
+    res.status(500).json({ error: 'Failed to save item' });
+  }
+});
+
+// Remove a saved item
+app.delete('/api/user/saved/:savedId', (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const { savedId } = req.params;
+    
+    let savedItems = userSavedItems.get(userId);
+    if (!savedItems) {
+      return res.status(404).json({ error: 'No saved items found' });
+    }
+    
+    // Find and remove item
+    let removed = false;
+    ['dates', 'gifts', 'tips'].forEach(category => {
+      const index = savedItems[category].findIndex(item => item.savedId === savedId);
+      if (index !== -1) {
+        savedItems[category].splice(index, 1);
+        removed = true;
+      }
+    });
+    
+    if (!removed) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+    
+    userSavedItems.set(userId, savedItems);
+    
+    res.json({
+      success: true,
+      message: 'Item removed',
+      totalSaved: savedItems.dates.length + savedItems.gifts.length + savedItems.tips.length
+    });
+  } catch (error) {
+    console.error('Remove saved item error:', error);
+    res.status(500).json({ error: 'Failed to remove item' });
+  }
+});
+
+// ==========================================
 // ADMIN ENDPOINTS
 // ==========================================
 

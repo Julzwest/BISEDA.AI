@@ -12,6 +12,7 @@ import SubscriptionSuccess from './pages/SubscriptionSuccess.jsx';
 import SubscriptionCancel from './pages/SubscriptionCancel.jsx';
 import Admin from './pages/Admin.jsx';
 import Auth from './pages/Auth.jsx';
+import UserProfile from './pages/UserProfile.jsx';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -75,6 +76,7 @@ function App() {
           <Route path="/subscription/success" element={<SubscriptionSuccess />} />
           <Route path="/subscription/cancel" element={<SubscriptionCancel />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/profile" element={<UserProfile onLogout={handleLogout} />} />
         </Routes>
       </Layout>
     </Router>

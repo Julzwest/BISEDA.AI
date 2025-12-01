@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MapPin, Coffee, UtensilsCrossed, Film, Music, Dumbbell, Palette, TreePine, Sparkles, Heart, Star, Crown, TrendingUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { SaveButton } from '@/components/SaveButton';
 import { getBackendUrl } from '@/utils/getBackendUrl';
 import { base44 } from '@/api/base44Client';
 
@@ -609,17 +610,24 @@ Mos shtoni tekst tjetër, VETËM JSON.`;
                             </span>
                           )}
                         </div>
-                        {suggestion.googleMapsLink && (
-                          <a
-                            href={suggestion.googleMapsLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 mt-3 px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 rounded-lg text-xs font-semibold text-blue-300 transition-all"
-                          >
-                            <MapPin className="w-3 h-3" />
-                            Shiko në Google Maps
-                          </a>
-                        )}
+                        <div className="flex items-center gap-2 mt-3 flex-wrap">
+                          {suggestion.googleMapsLink && (
+                            <a
+                              href={suggestion.googleMapsLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 rounded-lg text-xs font-semibold text-blue-300 transition-all"
+                            >
+                              <MapPin className="w-3 h-3" />
+                              Shiko në Google Maps
+                            </a>
+                          )}
+                          <SaveButton 
+                            item={suggestion} 
+                            type="date"
+                            className="text-xs"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>

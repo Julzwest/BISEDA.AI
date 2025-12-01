@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { SaveButton } from '@/components/SaveButton';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Lightbulb, MessageSquare, Heart, Sparkles, TrendingUp, Shield, Upload, Send } from 'lucide-react';
@@ -493,6 +494,19 @@ Përgjigju në shqip duke u bazuar në kontekstin e mëparshëm. Jep këshilla t
 
                       return null;
                     })}
+                    
+                    {/* Save Button */}
+                    <div className="mt-4">
+                      <SaveButton 
+                        item={{
+                          title: item.question,
+                          content: item.answer,
+                          category: selectedCategory?.title || 'Përgjithshme'
+                        }} 
+                        type="tip"
+                        className="text-sm"
+                      />
+                    </div>
                   </div>
                 </div>
               ))}

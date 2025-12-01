@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from './utils';
-import { Lightbulb, Home, Calendar, Bot, Flag, User, LogOut } from 'lucide-react';
+import { Lightbulb, Home, Calendar, Bot, Flag, User } from 'lucide-react';
 
 export default function Layout({ children, onLogout }) {
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const userName = localStorage.getItem('userName') || 'User';
   const location = useLocation();
   const currentPageName = location.pathname.split('/')[1]?.charAt(0).toUpperCase() + location.pathname.split('/')[1]?.slice(1) || 'Home';
 
@@ -36,36 +34,13 @@ export default function Layout({ children, onLogout }) {
         }
       `}</style>
       
-      {/* Top Bar with User Menu */}
+      {/* Top Bar with User Profile Link */}
       <div className="absolute top-0 right-0 z-50 p-4">
-        <div className="relative">
-          <button
-            onClick={() => setShowUserMenu(!showUserMenu)}
-            className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-          >
+        <Link to="/profile">
+          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
             <User className="w-5 h-5 text-white" />
-          </button>
-          
-          {/* User Menu Dropdown */}
-          {showUserMenu && (
-            <div className="absolute top-12 right-0 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl p-3 min-w-[200px]">
-              <div className="pb-3 mb-3 border-b border-slate-700">
-                <p className="text-white font-semibold text-sm">{userName}</p>
-                <p className="text-slate-400 text-xs">{localStorage.getItem('userEmail')}</p>
-              </div>
-              <button
-                onClick={() => {
-                  setShowUserMenu(false);
-                  if (onLogout) onLogout();
-                }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="text-sm font-medium">Dil</span>
-              </button>
-            </div>
-          )}
-        </div>
+          </div>
+        </Link>
       </div>
       
       {/* Main Content Area - Takes all available space */}

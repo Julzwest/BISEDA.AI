@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Gift, Heart, Sparkles, ShoppingBag, Star, TrendingUp, ExternalLink, MapPin, Store } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { SaveButton } from '@/components/SaveButton';
 import { base44 } from '@/api/base44Client';
 
 export default function GiftSuggestions() {
@@ -611,16 +612,23 @@ RULES:
                         )}
                       </div>
                       <p className="text-slate-300 text-sm mb-4 leading-relaxed">{gift.description}</p>
-                      <Button
-                        onClick={() => handleAffiliateClick(gift.affiliateLink, gift.name)}
-                        className="w-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white"
-                      >
-                        <span className="flex items-center justify-center gap-2">
-                          <ShoppingBag className="w-4 h-4" />
-                          <span>Shiko dhe Blij</span>
-                          <ExternalLink className="w-4 h-4" />
-                        </span>
-                      </Button>
+                      <div className="space-y-2">
+                        <Button
+                          onClick={() => handleAffiliateClick(gift.affiliateLink, gift.name)}
+                          className="w-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white"
+                        >
+                          <span className="flex items-center justify-center gap-2">
+                            <ShoppingBag className="w-4 h-4" />
+                            <span>Shiko dhe Blij</span>
+                            <ExternalLink className="w-4 h-4" />
+                          </span>
+                        </Button>
+                        <SaveButton 
+                          item={gift} 
+                          type="gift"
+                          className="w-full"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
