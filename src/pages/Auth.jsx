@@ -74,8 +74,21 @@ export default function Auth({ onAuthSuccess }) {
     setLoading(true);
 
     try {
-      // Initialize Apple Sign In
-      if (window.AppleID) {
+      // Check if Apple Sign In SDK is available
+      if (window.AppleID && window.AppleID.auth) {
+        // Try to initialize if not already done
+        try {
+          window.AppleID.auth.init({
+            clientId: 'ai.biseda.web',
+            scope: 'name email',
+            redirectURI: window.location.origin,
+            state: 'biseda_auth',
+            usePopup: true
+          });
+        } catch (initErr) {
+          console.log('Apple Sign In already initialized or init error:', initErr);
+        }
+
         const data = await window.AppleID.auth.signIn();
         
         // Send Apple ID token to backend
@@ -85,8 +98,8 @@ export default function Auth({ onAuthSuccess }) {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            appleId: data.user || data.authorization.id_token,
-            email: data.user?.email || `${data.authorization.id_token}@privaterelay.appleid.com`,
+            appleId: data.user || data.authorization?.id_token,
+            email: data.user?.email || `apple_${Date.now()}@privaterelay.appleid.com`,
             username: data.user?.name?.firstName || `AppleUser_${Date.now()}`
           })
         });
@@ -106,12 +119,19 @@ export default function Auth({ onAuthSuccess }) {
           setError(result.error || 'Apple Sign In failed');
         }
       } else {
-        // Fallback for when Apple Sign In is not available (web/development)
-        setError('Sign in with Apple is only available on iOS devices or Safari browser');
+        // Apple SDK not loaded - needs Apple Developer setup
+        setError('Sign in with Apple nuk është konfiguruar ende. Ju lutem përdorni email.');
       }
     } catch (err) {
       console.error('Apple Sign In error:', err);
-      setError('Apple Sign In failed. Please try email/password.');
+      // More specific error messages
+      if (err.error === 'popup_closed_by_user') {
+        setError('Dritarja u mbyll. Provoni përsëri.');
+      } else if (err.error === 'invalid_client') {
+        setError('Apple Sign In nuk është konfiguruar për këtë website.');
+      } else {
+        setError('Apple Sign In dështoi. Provoni me email/fjalëkalim.');
+      }
     } finally {
       setLoading(false);
     }
