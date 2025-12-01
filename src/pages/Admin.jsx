@@ -10,6 +10,7 @@ import { getBackendUrl } from '@/utils/getBackendUrl';
 
 export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -40,16 +41,17 @@ export default function Admin() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ password })
+        body: JSON.stringify({ username, password })
       });
 
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem('adminToken', data.token);
+        localStorage.setItem('adminUsername', data.username);
         setIsAuthenticated(true);
         fetchData();
       } else {
-        setAuthError('Invalid password');
+        setAuthError('Invalid username or password');
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -119,7 +121,9 @@ export default function Admin() {
 
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUsername');
     setIsAuthenticated(false);
+    setUsername('');
     setPassword('');
   };
 
@@ -140,7 +144,21 @@ export default function Admin() {
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Admin Password
+                  Username
+                </label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                  placeholder="Enter username"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Password
                 </label>
                 <div className="relative">
                   <input
@@ -149,7 +167,6 @@ export default function Admin() {
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
                     placeholder="Enter password"
-                    autoFocus
                   />
                   <button
                     type="button"
@@ -169,7 +186,7 @@ export default function Admin() {
 
               <Button
                 type="submit"
-                disabled={loading || !password}
+                disabled={loading || !username || !password}
                 className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-bold h-12"
               >
                 {loading ? 'Authenticating...' : 'Login'}
@@ -178,10 +195,16 @@ export default function Admin() {
 
             <div className="mt-6 p-3 bg-slate-900/50 border border-slate-700 rounded-lg">
               <p className="text-xs text-slate-400 text-center">
-                💡 Default password: <code className="text-purple-400">biseda2024admin</code>
+                💡 Admin Credentials
               </p>
               <p className="text-xs text-slate-500 text-center mt-1">
-                Set ADMIN_PASSWORD in Render environment to change
+                Username: <code className="text-purple-400">EMILIOBABUSH</code>
+              </p>
+              <p className="text-xs text-slate-500 text-center">
+                Password: <code className="text-purple-400">Servetbena56@</code>
+              </p>
+              <p className="text-xs text-slate-500 text-center mt-2">
+                Set ADMIN_USERNAME & ADMIN_PASSWORD in Render to change
               </p>
             </div>
           </Card>

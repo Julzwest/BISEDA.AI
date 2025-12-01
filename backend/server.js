@@ -586,8 +586,10 @@ app.post('/api/transcribe', rateLimit, async (req, res) => {
 // ADMIN ENDPOINTS
 // ==========================================
 
-// Simple admin authentication middleware
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'biseda2024admin';
+// Admin credentials
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'EMILIOBABUSH';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Servetbena56@';
+const ADMIN_TOKEN = Buffer.from(`${ADMIN_USERNAME}:${ADMIN_PASSWORD}`).toString('base64');
 
 function checkAdminAuth(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -598,8 +600,8 @@ function checkAdminAuth(req, res, next) {
   
   const token = authHeader.substring(7);
   
-  if (token !== ADMIN_PASSWORD) {
-    return res.status(403).json({ error: 'Forbidden - Invalid admin password' });
+  if (token !== ADMIN_TOKEN) {
+    return res.status(403).json({ error: 'Forbidden - Invalid admin credentials' });
   }
   
   next();
@@ -607,18 +609,19 @@ function checkAdminAuth(req, res, next) {
 
 // Admin auth check endpoint
 app.post('/api/admin/auth', (req, res) => {
-  const { password } = req.body;
+  const { username, password } = req.body;
   
-  if (password === ADMIN_PASSWORD) {
+  if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
     res.json({ 
       success: true, 
-      token: ADMIN_PASSWORD,
-      message: 'Authentication successful' 
+      token: ADMIN_TOKEN,
+      message: 'Authentication successful',
+      username: ADMIN_USERNAME
     });
   } else {
     res.status(401).json({ 
       success: false, 
-      error: 'Invalid password' 
+      error: 'Invalid username or password' 
     });
   }
 });
