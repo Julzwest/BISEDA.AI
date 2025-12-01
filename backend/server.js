@@ -583,6 +583,170 @@ app.post('/api/transcribe', rateLimit, async (req, res) => {
 });
 
 // ==========================================
+// USER AUTHENTICATION ENDPOINTS
+// ==========================================
+
+// In-memory user accounts storage (for MVP - move to database later)
+const userAccounts = new Map();
+
+// User registration endpoint
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { username, email, phoneNumber, password, appleId } = req.body;
+    
+    // Validate required fields (if not using Apple Sign In)
+    if (!appleId && (!username || !email || !password)) {
+      return res.status(400).json({ 
+        error: 'Username, email, and password are required' 
+      });
+    }
+    
+    // Check if user already exists
+    const existingUser = Array.from(userAccounts.values()).find(
+      u => u.email === email || u.username === username
+    );
+    
+    if (existingUser) {
+      return res.status(409).json({ 
+        error: 'User with this email or username already exists' 
+      });
+    }
+    
+    // Create new user account
+    const userId = appleId || `user-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    const userAccount = {
+      userId,
+      username: username || `user_${Date.now()}`,
+      email,
+      phoneNumber: phoneNumber || null,
+      password: password || null, // In production, hash this!
+      appleId: appleId || null,
+      createdAt: new Date().toISOString(),
+      lastLogin: new Date().toISOString(),
+      isVerified: appleId ? true : false // Apple users are auto-verified
+    };
+    
+    userAccounts.set(userId, userAccount);
+    
+    // Also create user subscription profile
+    const user = getUser(userId);
+    saveUser(user);
+    
+    console.log(`✅ New user registered: ${username} (${email})`);
+    
+    res.json({
+      success: true,
+      user: {
+        userId,
+        username: userAccount.username,
+        email: userAccount.email,
+        phoneNumber: userAccount.phoneNumber,
+        createdAt: userAccount.createdAt
+      },
+      message: 'Registration successful'
+    });
+    
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({ 
+      error: 'Registration failed',
+      message: error.message 
+    });
+  }
+});
+
+// User login endpoint
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password, appleId } = req.body;
+    
+    // Find user by email or Apple ID
+    let userAccount;
+    if (appleId) {
+      userAccount = Array.from(userAccounts.values()).find(u => u.appleId === appleId);
+    } else {
+      if (!email || !password) {
+        return res.status(400).json({ 
+          error: 'Email and password are required' 
+        });
+      }
+      
+      userAccount = Array.from(userAccounts.values()).find(u => u.email === email);
+      
+      // Verify password
+      if (!userAccount || userAccount.password !== password) {
+        return res.status(401).json({ 
+          error: 'Invalid email or password' 
+        });
+      }
+    }
+    
+    if (!userAccount) {
+      return res.status(404).json({ 
+        error: 'User not found' 
+      });
+    }
+    
+    // Update last login
+    userAccount.lastLogin = new Date().toISOString();
+    userAccounts.set(userAccount.userId, userAccount);
+    
+    console.log(`✅ User logged in: ${userAccount.username}`);
+    
+    res.json({
+      success: true,
+      user: {
+        userId: userAccount.userId,
+        username: userAccount.username,
+        email: userAccount.email,
+        phoneNumber: userAccount.phoneNumber,
+        createdAt: userAccount.createdAt
+      },
+      message: 'Login successful'
+    });
+    
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ 
+      error: 'Login failed',
+      message: error.message 
+    });
+  }
+});
+
+// Get current user info
+app.get('/api/auth/me', (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const userAccount = userAccounts.get(userId);
+    
+    if (!userAccount) {
+      return res.status(404).json({ 
+        error: 'User not found' 
+      });
+    }
+    
+    res.json({
+      user: {
+        userId: userAccount.userId,
+        username: userAccount.username,
+        email: userAccount.email,
+        phoneNumber: userAccount.phoneNumber,
+        createdAt: userAccount.createdAt,
+        lastLogin: userAccount.lastLogin
+      }
+    });
+    
+  } catch (error) {
+    console.error('Get user info error:', error);
+    res.status(500).json({ 
+      error: 'Failed to get user info',
+      message: error.message 
+    });
+  }
+});
+
+// ==========================================
 // ADMIN ENDPOINTS
 // ==========================================
 
