@@ -10,6 +10,7 @@ export default function FirstDates() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   
   const backendUrl = getBackendUrl();
 
@@ -219,12 +220,21 @@ export default function FirstDates() {
       alert('Ju lutem zgjidhni qytetin dhe kategorinë!');
       return;
     }
-    await generateAISuggestions(selectedCity, selectedCategory);
+    await generateAISuggestions(selectedCity, selectedCategory, false);
   };
 
-  const generateAISuggestions = async (city, category) => {
-    setLoading(true);
-    setSuggestions([]);
+  const handleLoadMore = async () => {
+    if (!selectedCity || !selectedCategory) return;
+    await generateAISuggestions(selectedCity, selectedCategory, true);
+  };
+
+  const generateAISuggestions = async (city, category, isLoadMore = false) => {
+    if (isLoadMore) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+      setSuggestions([]);
+    }
 
     try {
       // Create the prompt for OpenAI to generate REAL local businesses
@@ -280,18 +290,28 @@ Mos shtoni tekst tjetër, VETËM JSON.`;
         location: suggestion.location || city,
         rating: suggestion.rating || '4.5',
         price: suggestion.price || '$$',
-        featured: index === 0, // Mark first as featured
+        featured: index === 0 && !isLoadMore, // Mark first as featured only on initial load
         sponsored: false
       }));
 
-      setSuggestions(formattedSuggestions);
+      // Append or replace suggestions based on isLoadMore
+      if (isLoadMore) {
+        setSuggestions(prev => [...prev, ...formattedSuggestions]);
+      } else {
+        setSuggestions(formattedSuggestions);
+      }
     } catch (error) {
       console.error('Error generating AI suggestions:', error);
       // Fallback to hardcoded suggestions on error
       const fallbackSuggestions = getSuggestions(city, category.id);
-      setSuggestions(fallbackSuggestions);
+      if (isLoadMore) {
+        setSuggestions(prev => [...prev, ...fallbackSuggestions]);
+      } else {
+        setSuggestions(fallbackSuggestions);
+      }
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
@@ -502,6 +522,27 @@ Mos shtoni tekst tjetër, VETËM JSON.`;
                 </Card>
               );
             })}
+          </div>
+
+          {/* Load More Button */}
+          <div className="mt-6">
+            <Button
+              onClick={handleLoadMore}
+              disabled={loadingMore}
+              className="w-full py-4 rounded-2xl font-bold text-base bg-gradient-to-r from-purple-600/80 via-pink-600/80 to-rose-600/80 text-white hover:from-purple-600 hover:via-pink-600 hover:to-rose-600 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loadingMore ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span>Duke ngarkuar më shumë...</span>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  <span>Ngarko Më Shumë Rezultate</span>
+                </div>
+              )}
+            </Button>
           </div>
         </div>
       )}
