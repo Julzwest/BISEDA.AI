@@ -15,6 +15,7 @@ export default function GiftSuggestions() {
   const [localShops, setLocalShops] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingShops, setIsLoadingShops] = useState(false);
+  const [isLoadingMoreShops, setIsLoadingMoreShops] = useState(false);
   const [debugInfo, setDebugInfo] = useState('');
 
   const cities = [
@@ -192,14 +193,18 @@ RULES:
     }
   };
 
-  const searchLocalShops = async () => {
+  const searchLocalShops = async (isLoadMore = false) => {
     if (!selectedCity) return;
     
-    setIsLoadingShops(true);
-    setLocalShops([]);
+    if (isLoadMore) {
+      setIsLoadingMoreShops(true);
+    } else {
+      setIsLoadingShops(true);
+      setLocalShops([]);
+    }
 
     try {
-      console.log('🏪 Searching for local shops in', selectedCity);
+      console.log('🏪 Searching for local shops in', selectedCity, isLoadMore ? '(loading more)' : '');
       
       // Search for gift-related shops based on interests
       const shopQuery = `gift shops jewelry stores flower shops boutiques bookstores ${partnerInterests || ''}`;
@@ -222,8 +227,8 @@ RULES:
         if (data.source === 'google-places' && data.places && data.places.length > 0) {
           console.log('✅ Found', data.places.length, 'local shops');
           
-          const formattedShops = data.places.map((shop, index) => ({
-            id: index + 1,
+          let formattedShops = data.places.map((shop, index) => ({
+            id: isLoadMore ? localShops.length + index + 1 : index + 1,
             name: shop.name,
             description: shop.description,
             location: shop.location,
@@ -234,7 +239,17 @@ RULES:
             source: 'google'
           }));
           
-          setLocalShops(formattedShops);
+          // If loading more, filter out duplicates
+          if (isLoadMore) {
+            const existingNames = localShops.map(s => s.name.toLowerCase());
+            formattedShops = formattedShops.filter(shop => 
+              !existingNames.includes(shop.name.toLowerCase())
+            );
+            console.log('✅ Filtered duplicates, adding', formattedShops.length, 'new shops');
+            setLocalShops(prev => [...prev, ...formattedShops]);
+          } else {
+            setLocalShops(formattedShops);
+          }
         } else {
           console.log('⚠️ No local shops found or Google Places not available');
         }
@@ -243,7 +258,12 @@ RULES:
       console.error('❌ Error searching local shops:', error);
     } finally {
       setIsLoadingShops(false);
+      setIsLoadingMoreShops(false);
     }
+  };
+
+  const handleLoadMoreShops = () => {
+    searchLocalShops(true);
   };
 
   const generateMockSuggestions = (interests, occasion, budget) => {
@@ -436,90 +456,17 @@ RULES:
         </Button>
       </div>
 
-      {/* Loading State */}
-      {isLoading && (
-        <div className="text-center py-8">
-          <div className="inline-block w-8 h-8 border-4 border-pink-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-slate-400 mt-4 text-sm">Duke gjeneruar sugjerime dhuratash...</p>
+      {/* Loading Local Shops */}
+      {isLoadingShops && selectedCity && (
+        <div className="text-center py-6 mb-6">
+          <div className="inline-block w-6 h-6 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-slate-400 mt-3 text-sm">Duke kërkuar dyqane lokale në {selectedCity}...</p>
         </div>
       )}
 
-      {/* Gift Suggestions */}
-      {!isLoading && suggestions.length > 0 && (
-        <div className="mb-6">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-pink-500 to-transparent"></div>
-            <h2 className="text-base font-bold text-white">Sugjerime Dhuratash</h2>
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-pink-500 to-transparent"></div>
-          </div>
-
-          <div className="space-y-4">
-            {suggestions.map((gift) => (
-              <Card
-                key={gift.id}
-                className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-2 border-pink-500/30 backdrop-blur-sm hover:scale-[1.02] transition-all"
-              >
-                <div className="p-5">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shrink-0 shadow-lg">
-                      <Gift className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h3 className="text-lg font-bold text-white mb-1">{gift.name}</h3>
-                          <div className="flex items-center gap-2 mb-2">
-                            {gift.rating && (
-                              <div className="flex items-center gap-1">
-                                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                                <span className="text-xs text-slate-300">{gift.rating}</span>
-                              </div>
-                            )}
-                            {gift.category && (
-                              <span className="px-2 py-0.5 bg-pink-500/20 text-pink-300 rounded-lg text-xs font-semibold">
-                                {gift.category}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        {gift.price && (
-                          <span className="text-sm font-bold text-pink-400 shrink-0">
-                            {gift.price}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-slate-300 text-sm mb-4 leading-relaxed">{gift.description}</p>
-                      <Button
-                        onClick={() => handleAffiliateClick(gift.affiliateLink, gift.name)}
-                        className="w-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white"
-                      >
-                        <span className="flex items-center justify-center gap-2">
-                          <ShoppingBag className="w-4 h-4" />
-                          <span>Shiko dhe Blij</span>
-                          <ExternalLink className="w-4 h-4" />
-                        </span>
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Empty State */}
-      {!isLoading && suggestions.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-6xl mb-3">🎁</div>
-          <p className="text-slate-400 text-sm mb-2">Shkruani interesat e partnerit dhe zgjidhni rastin</p>
-          <p className="text-slate-500 text-xs">AI do të gjenerojë sugjerime perfekte për dhuratë</p>
-        </div>
-      )}
-
-      {/* Local Shops Section */}
+      {/* Local Shops Section - SHOWN FIRST */}
       {selectedCity && localShops.length > 0 && (
-        <div className="mb-6 mt-8">
+        <div className="mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent"></div>
             <h2 className="text-base font-bold text-white flex items-center gap-2">
@@ -584,14 +531,111 @@ RULES:
               </Card>
             ))}
           </div>
+
+          {/* Load More Shops Button */}
+          <div className="mt-4">
+            <Button
+              onClick={handleLoadMoreShops}
+              disabled={isLoadingMoreShops}
+              className="w-full py-3 rounded-2xl font-bold text-sm bg-gradient-to-r from-cyan-600/80 via-blue-600/80 to-cyan-600/80 text-white hover:from-cyan-600 hover:via-blue-600 hover:to-cyan-600 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+            >
+              {isLoadingMoreShops ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span>Duke ngarkuar më shumë dyqane...</span>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center gap-2">
+                  <Store className="w-5 h-5" />
+                  <span>Ngarko Më Shumë Dyqane</span>
+                </div>
+              )}
+            </Button>
+          </div>
         </div>
       )}
 
-      {/* Loading Local Shops */}
-      {isLoadingShops && selectedCity && (
-        <div className="text-center py-6 mb-6">
-          <div className="inline-block w-6 h-6 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-slate-400 mt-3 text-sm">Duke kërkuar dyqane lokale në {selectedCity}...</p>
+      {/* Loading AI Suggestions State */}
+      {isLoading && (
+        <div className="text-center py-8">
+          <div className="inline-block w-8 h-8 border-4 border-pink-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-slate-400 mt-4 text-sm">Duke gjeneruar ide dhuratash...</p>
+        </div>
+      )}
+
+      {/* AI Gift Ideas - SHOWN SECOND (After Local Shops) */}
+      {!isLoading && suggestions.length > 0 && (
+        <div className="mb-6">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-pink-500 to-transparent"></div>
+            <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-pink-400" />
+              Ide Dhuratash (Online)
+            </h2>
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-pink-500 to-transparent"></div>
+          </div>
+
+          <div className="space-y-4">
+            {suggestions.map((gift) => (
+              <Card
+                key={gift.id}
+                className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-2 border-pink-500/30 backdrop-blur-sm hover:scale-[1.02] transition-all"
+              >
+                <div className="p-5">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shrink-0 shadow-lg">
+                      <Gift className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <h3 className="text-lg font-bold text-white mb-1">{gift.name}</h3>
+                          <div className="flex items-center gap-2 mb-2">
+                            {gift.rating && (
+                              <div className="flex items-center gap-1">
+                                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                                <span className="text-xs text-slate-300">{gift.rating}</span>
+                              </div>
+                            )}
+                            {gift.category && (
+                              <span className="px-2 py-0.5 bg-pink-500/20 text-pink-300 rounded-lg text-xs font-semibold">
+                                {gift.category}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {gift.price && (
+                          <span className="text-sm font-bold text-pink-400 shrink-0">
+                            {gift.price}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-slate-300 text-sm mb-4 leading-relaxed">{gift.description}</p>
+                      <Button
+                        onClick={() => handleAffiliateClick(gift.affiliateLink, gift.name)}
+                        className="w-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white"
+                      >
+                        <span className="flex items-center justify-center gap-2">
+                          <ShoppingBag className="w-4 h-4" />
+                          <span>Shiko dhe Blij</span>
+                          <ExternalLink className="w-4 h-4" />
+                        </span>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!isLoading && !isLoadingShops && suggestions.length === 0 && localShops.length === 0 && (
+        <div className="text-center py-12">
+          <div className="text-6xl mb-3">🎁</div>
+          <p className="text-slate-400 text-sm mb-2">Shkruani interesat e partnerit dhe zgjidhni rastin</p>
+          <p className="text-slate-500 text-xs">AI do të gjenerojë sugjerime perfekte për dhuratë</p>
         </div>
       )}
 
