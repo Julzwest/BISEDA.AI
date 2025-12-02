@@ -276,17 +276,6 @@ export default function Auth({ onAuthSuccess }) {
 
           {/* Social Sign-in Buttons */}
           <div className="space-y-3 mb-4">
-            {/* Sign in with Apple */}
-            <button
-              type="button"
-              onClick={handleAppleSignIn}
-              disabled={loading}
-              className="w-full bg-black hover:bg-gray-900 text-white font-semibold h-12 flex items-center justify-center gap-2 rounded-lg"
-            >
-              <Apple className="w-5 h-5" fill="currentColor" />
-              <span>Vazhdo me Apple</span>
-            </button>
-
             {/* Sign in with Google */}
             <button
               type="button"
