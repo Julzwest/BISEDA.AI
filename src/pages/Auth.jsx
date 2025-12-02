@@ -898,8 +898,9 @@ export default function Auth({ onAuthSuccess }) {
           <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-600 to-transparent"></div>
         </div>
 
-        {/* Guest Mode Button */}
-        <button
+        {/* Guest Mode Button - Styled as proper button */}
+        <Button
+          type="button"
           onClick={() => {
             initGuestSession();
             if (onAuthSuccess) {
@@ -910,27 +911,18 @@ export default function Auth({ onAuthSuccess }) {
               });
             }
           }}
-          className="w-full group relative overflow-hidden px-6 py-4 bg-slate-800/50 hover:bg-slate-700/50 border-2 border-dashed border-slate-600 hover:border-cyan-500/50 rounded-2xl transition-all duration-300"
+          className="w-full py-6 rounded-2xl font-bold text-lg bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 hover:from-cyan-500 hover:via-blue-500 hover:to-indigo-500 text-white shadow-xl shadow-blue-500/30 hover:shadow-blue-500/50 hover:scale-[1.02] active:scale-95 transition-all duration-200"
         >
           <div className="flex items-center justify-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center group-hover:from-cyan-600 group-hover:to-blue-600 transition-all">
-              <UserX className="w-5 h-5 text-slate-300 group-hover:text-white" />
-            </div>
-            <div className="text-left">
-              <p className="text-white font-semibold">Vazhdo si Vizitor</p>
-              <p className="text-slate-400 text-xs flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                5 minuta akses • 2 kredite screenshot
-              </p>
-            </div>
+            <UserX className="w-6 h-6" />
+            <span>Vazhdo si Vizitor</span>
           </div>
-          {/* Subtle glow on hover */}
-          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 via-cyan-500/5 to-cyan-500/0 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl" />
-        </button>
-
+        </Button>
+        
         {/* Guest Mode Info */}
-        <p className="text-xs text-slate-500 text-center mt-3">
-          Si vizitor ke akses të limituar. Regjistrohu për akses të plotë.
+        <p className="text-xs text-slate-400 text-center mt-3 flex items-center justify-center gap-2">
+          <Clock className="w-3.5 h-3.5" />
+          5 minuta akses • 2 kredite screenshot
         </p>
 
         {/* Additional Info */}
