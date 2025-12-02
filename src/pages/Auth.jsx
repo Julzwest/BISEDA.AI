@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Mail, Lock, User, Phone, Eye, EyeOff, Apple, Sparkles, Globe, MapPin } from 'lucide-react';
 import { getBackendUrl } from '@/utils/getBackendUrl';
 import { countries, getCitiesForCountry } from '@/config/countries';
+import { Capacitor } from '@capacitor/core';
 
 export default function Auth({ onAuthSuccess }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -78,14 +79,85 @@ export default function Auth({ onAuthSuccess }) {
     }
   };
 
+  // Check if running in Capacitor (native iOS app)
+  const isNativeApp = Capacitor.isNativePlatform();
+  const [SignInWithApple, setSignInWithApple] = useState(null);
+
+  // Load the Apple Sign In plugin on mount (for native app)
+  useEffect(() => {
+    const loadAppleSignIn = async () => {
+      if (isNativeApp) {
+        try {
+          const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
+          setSignInWithApple(() => SignInWithApple);
+          console.log('✅ Apple Sign In plugin loaded');
+        } catch (err) {
+          console.log('Apple Sign In plugin not available:', err);
+        }
+      }
+    };
+    loadAppleSignIn();
+  }, [isNativeApp]);
+
   const handleAppleSignIn = async () => {
     setError('');
     setLoading(true);
 
     try {
-      // Check if Apple Sign In SDK is available
-      if (window.AppleID && window.AppleID.auth) {
-        // Try to initialize if not already done
+      // For native iOS app - use Capacitor Sign In with Apple
+      if (isNativeApp && SignInWithApple) {
+        try {
+          console.log('🍎 Starting native Apple Sign In...');
+          
+          const result = await SignInWithApple.authorize({
+            clientId: 'ai.biseda.app',
+            redirectURI: 'https://bisedaai.com',
+            scopes: 'email name'
+          });
+          
+          console.log('✅ Apple Sign In result:', result);
+          
+          // Send to backend
+          const response = await fetch(`${backendUrl}/api/auth/apple`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              identityToken: result.response?.identityToken,
+              email: result.response?.email,
+              givenName: result.response?.givenName,
+              familyName: result.response?.familyName
+            })
+          });
+
+          const data = await response.json();
+          
+          if (response.ok) {
+            localStorage.setItem('userId', data.user.userId);
+            localStorage.setItem('userEmail', data.user.email);
+            localStorage.setItem('userName', data.user.username);
+            localStorage.setItem('isAuthenticated', 'true');
+            
+            // Save location if set
+            if (formData.country) {
+              localStorage.setItem('userCountry', formData.country);
+              localStorage.setItem('userCity', formData.city || '');
+            }
+            
+            if (onAuthSuccess) onAuthSuccess(data.user);
+          } else {
+            setError(data.error || 'Apple Sign In dështoi');
+          }
+        } catch (nativeErr) {
+          console.error('Native Apple Sign In error:', nativeErr);
+          if (nativeErr.message?.includes('canceled') || nativeErr.message?.includes('1001')) {
+            setError('Sign In u anulua.');
+          } else {
+            setError(`Apple Sign In dështoi: ${nativeErr.message || 'Provoni me email'}`);
+          }
+        }
+      } 
+      // For web - Apple Sign In requires Apple Developer setup
+      else if (!isNativeApp && window.AppleID && window.AppleID.auth) {
         try {
           window.AppleID.auth.init({
             clientId: 'ai.biseda.web',
@@ -94,53 +166,50 @@ export default function Auth({ onAuthSuccess }) {
             state: 'biseda_auth',
             usePopup: true
           });
-        } catch (initErr) {
-          console.log('Apple Sign In already initialized or init error:', initErr);
-        }
-
-        const data = await window.AppleID.auth.signIn();
-        
-        // Send Apple ID token to backend
-        const response = await fetch(`${backendUrl}/api/auth/${isLogin ? 'login' : 'register'}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            appleId: data.user || data.authorization?.id_token,
-            email: data.user?.email || `apple_${Date.now()}@privaterelay.appleid.com`,
-            username: data.user?.name?.firstName || `AppleUser_${Date.now()}`
-          })
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-          localStorage.setItem('userId', result.user.userId);
-          localStorage.setItem('userEmail', result.user.email);
-          localStorage.setItem('userName', result.user.username);
-          localStorage.setItem('isAuthenticated', 'true');
           
-          if (onAuthSuccess) {
-            onAuthSuccess(result.user);
+          const data = await window.AppleID.auth.signIn();
+          
+          const response = await fetch(`${backendUrl}/api/auth/apple`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              identityToken: data.authorization?.id_token,
+              email: data.user?.email,
+              givenName: data.user?.name?.firstName,
+              familyName: data.user?.name?.familyName
+            })
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            localStorage.setItem('userId', result.user.userId);
+            localStorage.setItem('userEmail', result.user.email);
+            localStorage.setItem('userName', result.user.username);
+            localStorage.setItem('isAuthenticated', 'true');
+            if (onAuthSuccess) onAuthSuccess(result.user);
+          } else {
+            setError(result.error || 'Apple Sign In dështoi');
           }
-        } else {
-          setError(result.error || 'Apple Sign In failed');
+        } catch (webErr) {
+          console.error('Web Apple Sign In error:', webErr);
+          if (webErr.error === 'popup_closed_by_user') {
+            setError('Dritarja u mbyll. Provoni përsëri.');
+          } else {
+            setError('Apple Sign In nuk është konfiguruar për web. Përdorni email.');
+          }
         }
-      } else {
-        // Apple SDK not loaded - needs Apple Developer setup
-        setError('Sign in with Apple nuk është konfiguruar ende. Ju lutem përdorni email.');
+      } 
+      // Apple SDK not available
+      else if (isNativeApp && !SignInWithApple) {
+        setError('Duke ngarkuar Apple Sign In... Provoni përsëri.');
+      }
+      else {
+        setError('🍎 Apple Sign In vetëm në iOS app. Përdorni email më poshtë.');
       }
     } catch (err) {
       console.error('Apple Sign In error:', err);
-      // More specific error messages
-      if (err.error === 'popup_closed_by_user') {
-        setError('Dritarja u mbyll. Provoni përsëri.');
-      } else if (err.error === 'invalid_client') {
-        setError('Apple Sign In nuk është konfiguruar për këtë website.');
-      } else {
-        setError('Apple Sign In dështoi. Provoni me email/fjalëkalim.');
-      }
+      setError('Apple Sign In dështoi. Provoni me email/fjalëkalim.');
     } finally {
       setLoading(false);
     }

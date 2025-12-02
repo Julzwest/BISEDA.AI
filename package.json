@@ -19,6 +19,7 @@
     "generate:icons": "node scripts/generate-icons-complete.js"
   },
   "dependencies": {
+    "@capacitor-community/apple-sign-in": "^7.1.0",
     "@capacitor/android": "^7.4.4",
     "@capacitor/cli": "^7.4.4",
     "@capacitor/clipboard": "^7.0.2",

@@ -714,6 +714,71 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// Apple Sign In endpoint
+app.post('/api/auth/apple', async (req, res) => {
+  try {
+    const { identityToken, email, givenName, familyName } = req.body;
+    
+    if (!identityToken) {
+      return res.status(400).json({ error: 'Identity token is required' });
+    }
+    
+    // For now, we'll trust the token from Apple
+    // In production, you should verify the token with Apple's servers
+    
+    // Generate a unique Apple user ID from the token (simplified)
+    const appleUserId = `apple_${Buffer.from(identityToken.substring(0, 50)).toString('base64').substring(0, 20)}`;
+    
+    // Check if user already exists with this Apple ID
+    let userAccount = Array.from(userAccounts.values()).find(u => u.appleId === appleUserId);
+    
+    if (userAccount) {
+      // Existing user - update last login
+      userAccount.lastLogin = new Date().toISOString();
+      console.log(`✅ Apple user logged in: ${userAccount.userId}`);
+    } else {
+      // New user - create account
+      const userId = generateUserId();
+      const username = givenName ? `${givenName}${familyName || ''}`.replace(/\s/g, '') : `AppleUser_${Date.now()}`;
+      const userEmail = email || `${appleUserId}@privaterelay.appleid.com`;
+      
+      userAccount = {
+        userId,
+        username,
+        email: userEmail,
+        appleId: appleUserId,
+        phoneNumber: null,
+        passwordHash: null, // No password for Apple users
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString(),
+        subscriptionTier: 'free',
+        savedItems: { dates: [], gifts: [], tips: [] }
+      };
+      
+      userAccounts.set(userId, userAccount);
+      initializeUserData(userId);
+      console.log(`✅ New Apple user created: ${userId}`);
+    }
+    
+    res.json({
+      message: 'Apple Sign In successful',
+      user: {
+        userId: userAccount.userId,
+        username: userAccount.username,
+        email: userAccount.email,
+        isAppleUser: true
+      }
+    });
+    
+  } catch (error) {
+    console.error('Apple Sign In error:', error);
+    res.status(500).json({ 
+      error: 'Apple Sign In failed',
+      message: error.message 
+    });
+  }
+});
+
 // Get current user info
 app.get('/api/auth/me', (req, res) => {
   try {
