@@ -1,2 +1,0 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/web-B3Yvg3b6-D1ygZ578.js","assets/index-CHUthFG6.js","assets/index-DtQptP3c.css"])))=>i.map(i=>d[i]);
-import{B as n,F as _,_ as a}from"./index-CHUthFG6.js";const t=(s,e=t,i=e.f||(e.f=["assets/web-B3Yvg3b6.js","assets/index-BMiE6-PX.js","assets/index-DtQptP3c.css"]))=>s.map(p=>i[p]),m=n("SignInWithApple",{web:()=>_(()=>a(()=>import("./web-B3Yvg3b6-D1ygZ578.js"),__vite__mapDeps([0,1,2])),t([0,1,2])).then(s=>new s.SignInWithAppleWeb)});export{m as SignInWithApple};

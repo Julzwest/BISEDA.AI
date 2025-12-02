@@ -41,18 +41,17 @@ export default function ThemeSwitcher() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center" style={{ padding: '24px', paddingTop: 'max(24px, env(safe-area-inset-top))' }}>
+        <div className="fixed inset-0 z-[10000] flex items-start justify-center overflow-y-auto" style={{ padding: '80px 16px 24px 16px' }}>
           {/* Backdrop */}
           <div 
-            className="absolute inset-0 bg-black/70 backdrop-blur-md"
+            className="fixed inset-0 bg-black/70 backdrop-blur-md"
             onClick={() => setShowModal(false)}
           />
           
           {/* Modal Content - Centered */}
           <div 
             ref={modalRef}
-            className="relative w-full max-w-xs bg-slate-900 border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden"
-            style={{ marginTop: '20px' }}
+            className="relative w-full max-w-xs bg-slate-900 border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden my-auto"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-slate-700/50">
