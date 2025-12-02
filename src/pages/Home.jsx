@@ -6,33 +6,18 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import UsageDisplay from '@/components/UsageDisplay';
 import UpgradeModal from '@/components/UpgradeModal';
-import WelcomeScreen from '@/components/WelcomeScreen';
 
 export default function Home() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [userName, setUserName] = useState(null);
-  const [showWelcome, setShowWelcome] = useState(false);
 
   useEffect(() => {
-    // Check if user has seen welcome screen
-    const hasSeenWelcome = localStorage.getItem('hasSeenWelcome') === 'true';
-    if (!hasSeenWelcome) {
-      setShowWelcome(true);
-    } else {
-      // Get user name if exists
-      const name = localStorage.getItem('userName');
-      if (name) {
-        setUserName(name);
-      }
-    }
-  }, []);
-
-  const handleWelcomeContinue = (name) => {
-    setShowWelcome(false);
+    // Get user name if exists
+    const name = localStorage.getItem('userName');
     if (name) {
       setUserName(name);
     }
-  };
+  }, []);
 
   const features = [
     {
@@ -88,11 +73,6 @@ export default function Home() {
 
   return (
     <div>
-      {/* Welcome Screen */}
-      {showWelcome && (
-        <WelcomeScreen onContinue={handleWelcomeContinue} />
-      )}
-
       {/* Hero Section */}
       <div className="px-6 pt-20 pb-6">
         <div className="text-center mb-6">
