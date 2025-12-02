@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Mail, Lock, User, Phone, Eye, EyeOff, Apple, Sparkles, Globe, MapPin } from 'lucide-react';
+import { MessageSquare, Mail, Lock, User, Phone, Eye, EyeOff, Apple, Sparkles, Globe } from 'lucide-react';
 import { getBackendUrl } from '@/utils/getBackendUrl';
-import { countries, getCitiesForCountry } from '@/config/countries';
+import { countries } from '@/config/countries';
 import { Capacitor } from '@capacitor/core';
 
 export default function Auth({ onAuthSuccess }) {
@@ -13,8 +13,7 @@ export default function Auth({ onAuthSuccess }) {
     email: '',
     phoneNumber: '',
     password: '',
-    country: 'AL',
-    city: ''
+    country: 'AL'
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -61,7 +60,6 @@ export default function Auth({ onAuthSuccess }) {
         // Store location data (for new users or update existing)
         if (!isLogin || formData.country) {
           localStorage.setItem('userCountry', formData.country || 'AL');
-          localStorage.setItem('userCity', formData.city || '');
         }
         
         // Call success callback
@@ -140,7 +138,6 @@ export default function Auth({ onAuthSuccess }) {
             // Save location if set
             if (formData.country) {
               localStorage.setItem('userCountry', formData.country);
-              localStorage.setItem('userCity', formData.city || '');
             }
             
             if (onAuthSuccess) onAuthSuccess(data.user);
@@ -349,24 +346,19 @@ export default function Auth({ onAuthSuccess }) {
               </div>
             )}
 
-            {/* Country Selection (only for signup) */}
+            {/* Country Selection (only for signup - REQUIRED) */}
             {!isLogin && (
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Ku jeton? <span className="text-purple-400 text-xs">🌍</span>
+                  Ku jeton? <span className="text-pink-400">*</span>
                 </label>
                 <div className="relative">
                   <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                   <select
                     name="country"
                     value={formData.country}
-                    onChange={(e) => {
-                      setFormData({
-                        ...formData,
-                        country: e.target.value,
-                        city: '' // Reset city when country changes
-                      });
-                    }}
+                    onChange={handleInputChange}
+                    required
                     className="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-purple-500 appearance-none cursor-pointer"
                     style={{ fontSize: '16px' }}
                   >
@@ -377,32 +369,9 @@ export default function Auth({ onAuthSuccess }) {
                     ))}
                   </select>
                 </div>
-              </div>
-            )}
-
-            {/* City Selection (only for signup) */}
-            {!isLogin && formData.country && (
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Qyteti
-                </label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                  <select
-                    name="city"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-purple-500 appearance-none cursor-pointer"
-                    style={{ fontSize: '16px' }}
-                  >
-                    <option value="">Zgjidh qytetin...</option>
-                    {getCitiesForCountry(formData.country).map((city) => (
-                      <option key={city.nameEn} value={city.name}>
-                        {city.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  Kjo ndikon rezultatet në Takime dhe Dhurata
+                </p>
               </div>
             )}
 
