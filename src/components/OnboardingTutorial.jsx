@@ -167,7 +167,7 @@ export default function OnboardingTutorial({ onComplete, isGuest = false }) {
           {isGuest && currentStep === 0 && (
             <div className="mb-6 p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl">
               <p className="text-cyan-300 text-xs text-center">
-                🕐 Si vizitor ke 5 minuta akses dhe 2 kredite screenshot
+                👋 Po eksploron si vizitor - regjistrohu për të ruajtur progresin
               </p>
             </div>
           )}
