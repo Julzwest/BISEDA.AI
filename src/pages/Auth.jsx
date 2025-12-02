@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Mail, Lock, User, Phone, Eye, EyeOff, Apple, Sparkles } from 'lucide-react';
+import { MessageSquare, Mail, Lock, User, Phone, Eye, EyeOff, Sparkles, MapPin } from 'lucide-react';
 import { getBackendUrl } from '@/utils/getBackendUrl';
 import { countries } from '@/config/countries';
 import { Capacitor } from '@capacitor/core';
@@ -335,6 +335,31 @@ export default function Auth({ onAuthSuccess }) {
                     placeholder="+355 XX XXX XXXX"
                     style={{ fontSize: '16px' }}
                   />
+                </div>
+              </div>
+            )}
+
+            {/* Country (only for signup) */}
+            {!isLogin && (
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Shteti 🌍
+                </label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                  <select
+                    name="country"
+                    value={formData.country}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-purple-500 appearance-none cursor-pointer"
+                    style={{ fontSize: '16px' }}
+                  >
+                    {countries.map(c => (
+                      <option key={c.code} value={c.code}>
+                        {c.flag} {c.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             )}
