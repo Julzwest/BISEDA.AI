@@ -34,8 +34,9 @@ export default function Layout({ children, onLogout }) {
     <>
       <style>{`
         html, body {
-          background: #0f172a !important;
+          background: var(--bg-primary, #0f172a) !important;
           -webkit-overflow-scrolling: touch;
+          transition: background-color 0.3s ease;
         }
         
         * {
@@ -49,7 +50,7 @@ export default function Layout({ children, onLogout }) {
           left: 0;
           right: 0;
           height: env(safe-area-inset-bottom, 0px);
-          background: #0f172a;
+          background: var(--bg-primary, #0f172a);
           z-index: 9998;
         }
         
@@ -60,7 +61,7 @@ export default function Layout({ children, onLogout }) {
         }
         
         .nav-item.active {
-          color: #a855f7;
+          color: var(--accent-primary, #a855f7);
         }
         
         .nav-item.active::before {
@@ -71,12 +72,12 @@ export default function Layout({ children, onLogout }) {
           transform: translateX(-50%);
           width: 24px;
           height: 3px;
-          background: linear-gradient(90deg, #a855f7, #ec4899);
+          background: linear-gradient(90deg, var(--accent-primary, #a855f7), var(--accent-secondary, #ec4899));
           border-radius: 0 0 4px 4px;
         }
         
         .nav-item:not(.active):hover {
-          color: #c084fc;
+          color: var(--accent-primary, #c084fc);
         }
         
         .nav-icon {
@@ -100,9 +101,9 @@ export default function Layout({ children, onLogout }) {
           right: 0, 
           height: '60px',
           zIndex: 9999,
-          background: 'linear-gradient(to bottom, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.95))',
+          background: 'linear-gradient(to bottom, var(--bg-primary, rgba(15, 23, 42, 0.98)), var(--bg-primary, rgba(15, 23, 42, 0.95)))',
           backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(148, 163, 184, 0.1)'
+          borderBottom: '1px solid var(--border-color, rgba(148, 163, 184, 0.1))'
         }}
       >
         <div className="h-full px-4 flex items-center justify-between max-w-screen-xl mx-auto">
@@ -148,9 +149,9 @@ export default function Layout({ children, onLogout }) {
         bottom: 0, 
         left: 0, 
         right: 0, 
-        background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.95))',
+        background: 'linear-gradient(to top, var(--bg-primary, rgba(15, 23, 42, 0.98)), var(--bg-primary, rgba(15, 23, 42, 0.95)))',
         backdropFilter: 'blur(12px)',
-        borderTop: '1px solid rgba(148, 163, 184, 0.1)',
+        borderTop: '1px solid var(--border-color, rgba(148, 163, 184, 0.1))',
         zIndex: 9999,
         paddingBottom: 'env(safe-area-inset-bottom, 0px)'
       }}>

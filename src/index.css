@@ -344,3 +344,75 @@ input[type="password"] {
   --accent-primary: #f97316;
   --accent-secondary: #f43f5e;
 }
+
+/* Apply theme to body and root elements */
+html, body, #root {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Theme-aware cards and containers */
+.theme-card {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.theme-text {
+  color: var(--text-primary);
+}
+
+.theme-text-muted {
+  color: var(--text-secondary);
+}
+
+.theme-border {
+  border-color: var(--border-color);
+}
+
+/* Light theme specific overrides */
+.theme-light body,
+.theme-light #root {
+  background-color: #f8fafc !important;
+}
+
+.theme-light .bg-slate-950,
+.theme-light .bg-slate-900,
+.theme-light .from-slate-950,
+.theme-light .via-slate-900 {
+  background-color: #f8fafc !important;
+}
+
+.theme-light .text-white {
+  color: #0f172a !important;
+}
+
+.theme-light .text-slate-300,
+.theme-light .text-slate-400 {
+  color: #475569 !important;
+}
+
+.theme-light .bg-slate-800,
+.theme-light .bg-slate-800\/50,
+.theme-light .bg-slate-800\/80 {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-color: #e2e8f0 !important;
+}
+
+.theme-light .border-slate-700,
+.theme-light .border-slate-700\/50 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Midnight theme specific overrides */
+.theme-midnight .text-purple-400,
+.theme-midnight .text-purple-300 {
+  color: #60a5fa !important;
+}
+
+/* Sunset theme specific overrides */
+.theme-sunset .text-purple-400,
+.theme-sunset .text-purple-300 {
+  color: #fb923c !important;
+}
