@@ -7,7 +7,9 @@ const config = {
   },
   ios: {
     contentInset: 'automatic',
-    scrollEnabled: true
+    scrollEnabled: true,
+    backgroundColor: '#0f172a',
+    preferredContentMode: 'mobile'
   },
   plugins: {
     SplashScreen: {
@@ -23,6 +25,10 @@ const config = {
     Keyboard: {
       resize: 'body',
       resizeOnFullScreen: true
+    },
+    StatusBar: {
+      style: 'Dark',
+      backgroundColor: '#0f172a'
     }
   }
 };
