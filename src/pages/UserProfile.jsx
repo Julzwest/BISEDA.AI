@@ -4,16 +4,18 @@ import { Button } from '@/components/ui/button';
 import { 
   User, Mail, Phone, Crown, Zap, TrendingUp, Bookmark, 
   Heart, Gift, Lightbulb, Calendar, Trash2, ExternalLink,
-  CreditCard, LogOut, Shield, Star, MapPin, Globe, Check
+  CreditCard, LogOut, Shield, Star, MapPin, Globe, Check, Music, Share2
 } from 'lucide-react';
 import { getBackendUrl } from '@/utils/getBackendUrl';
 import UpgradeModal from '@/components/UpgradeModal';
 import { countries, getCitiesForCountry, getCountryByCode } from '@/config/countries';
+import { getFavorites, removeVenueFavorite, removeDateIdeaFavorite, removeTipFavorite, removeGiftFavorite } from '@/utils/favorites';
 
 export default function UserProfile({ onLogout }) {
   const [userInfo, setUserInfo] = useState(null);
   const [usage, setUsage] = useState(null);
   const [savedItems, setSavedItems] = useState(null);
+  const [localFavorites, setLocalFavorites] = useState(getFavorites());
   const [loading, setLoading] = useState(true);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
@@ -39,6 +41,16 @@ export default function UserProfile({ onLogout }) {
 
   useEffect(() => {
     fetchData();
+    
+    // Listen for favorites changes
+    const handleFavoritesChanged = () => {
+      setLocalFavorites(getFavorites());
+    };
+    window.addEventListener('favoritesChanged', handleFavoritesChanged);
+    
+    return () => {
+      window.removeEventListener('favoritesChanged', handleFavoritesChanged);
+    };
   }, []);
 
   const fetchData = async () => {
@@ -143,9 +155,9 @@ export default function UserProfile({ onLogout }) {
           <div className="flex items-center justify-center gap-2">
             <Bookmark className="w-4 h-4" />
             <span>Të Ruajtura</span>
-            {savedItems && (savedItems.dates.length + savedItems.gifts.length + savedItems.tips.length) > 0 && (
+            {(localFavorites.venues.length + localFavorites.dateIdeas.length + localFavorites.tips.length + localFavorites.gifts.length) > 0 && (
               <span className="px-1.5 py-0.5 bg-pink-500 text-white text-xs rounded-full">
-                {savedItems.dates.length + savedItems.gifts.length + savedItems.tips.length}
+                {localFavorites.venues.length + localFavorites.dateIdeas.length + localFavorites.tips.length + localFavorites.gifts.length}
               </span>
             )}
           </div>
@@ -352,37 +364,98 @@ export default function UserProfile({ onLogout }) {
       )}
 
       {/* Saved Items Tab */}
-      {activeTab === 'saved' && savedItems && (
+      {activeTab === 'saved' && (
         <div className="space-y-6">
-          {/* Saved Dates */}
-          {savedItems.dates.length > 0 && (
+          {/* Saved Venues (from Events page) */}
+          {localFavorites.venues.length > 0 && (
             <div>
               <h2 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-pink-400" />
-                Takime të Ruajtura ({savedItems.dates.length})
+                <Music className="w-5 h-5 text-yellow-400" />
+                Vende të Ruajtura ({localFavorites.venues.length})
               </h2>
               <div className="space-y-3">
-                {savedItems.dates.map((item) => (
-                  <Card key={item.savedId} className="bg-slate-800/80 border-pink-500/30 p-4">
+                {localFavorites.venues.map((venue) => (
+                  <Card key={venue.id || venue.name} className="bg-slate-800/80 border-yellow-500/30 p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h3 className="text-white font-bold mb-1">{item.name}</h3>
-                        <p className="text-slate-300 text-sm mb-2">{item.description}</p>
-                        {item.location && (
+                        <h3 className="text-white font-bold mb-1">{venue.name}</h3>
+                        <p className="text-slate-300 text-sm mb-2">{venue.description}</p>
+                        {venue.location && (
                           <p className="text-slate-400 text-xs flex items-center gap-1">
                             <MapPin className="w-3 h-3" />
-                            {item.location}
+                            {venue.location}
+                          </p>
+                        )}
+                        {venue.rating && (
+                          <p className="text-yellow-400 text-xs flex items-center gap-1 mt-1">
+                            <Star className="w-3 h-3 fill-yellow-400" />
+                            {venue.rating}
                           </p>
                         )}
                         <p className="text-slate-500 text-xs mt-2">
-                          Ruajtur: {new Date(item.savedAt).toLocaleDateString()}
+                          Ruajtur: {new Date(venue.savedAt).toLocaleDateString('sq-AL')}
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        {venue.googleMapsLink && (
+                          <a
+                            href={venue.googleMapsLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 bg-yellow-500/20 hover:bg-yellow-500/30 rounded-lg text-yellow-400 transition-colors"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                        )}
+                        <button
+                          onClick={() => {
+                            removeVenueFavorite(venue.id || venue.name);
+                            setLocalFavorites(getFavorites());
+                          }}
+                          className="p-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-red-400 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Saved Date Ideas */}
+          {localFavorites.dateIdeas.length > 0 && (
+            <div>
+              <h2 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-pink-400" />
+                Ide Takimesh të Ruajtura ({localFavorites.dateIdeas.length})
+              </h2>
+              <div className="space-y-3">
+                {localFavorites.dateIdeas.map((idea) => (
+                  <Card key={idea.id} className="bg-slate-800/80 border-pink-500/30 p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="text-white font-bold mb-1">{idea.title || idea.name}</h3>
+                        <p className="text-slate-300 text-sm mb-2">{idea.description}</p>
+                        {idea.location && (
+                          <p className="text-slate-400 text-xs flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            {idea.location}
+                          </p>
+                        )}
+                        <p className="text-slate-500 text-xs mt-2">
+                          Ruajtur: {new Date(idea.savedAt).toLocaleDateString('sq-AL')}
                         </p>
                       </div>
                       <button
-                        onClick={() => handleRemoveSaved(item.savedId)}
-                        className="text-red-400 hover:text-red-300 transition-colors"
+                        onClick={() => {
+                          removeDateIdeaFavorite(idea.id);
+                          setLocalFavorites(getFavorites());
+                        }}
+                        className="p-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-red-400 transition-colors"
                       >
-                        <Trash2 className="w-5 h-5" />
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </Card>
@@ -392,31 +465,34 @@ export default function UserProfile({ onLogout }) {
           )}
 
           {/* Saved Gifts */}
-          {savedItems.gifts.length > 0 && (
+          {localFavorites.gifts.length > 0 && (
             <div>
               <h2 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
                 <Gift className="w-5 h-5 text-rose-400" />
-                Dhurata të Ruajtura ({savedItems.gifts.length})
+                Dhurata të Ruajtura ({localFavorites.gifts.length})
               </h2>
               <div className="space-y-3">
-                {savedItems.gifts.map((item) => (
-                  <Card key={item.savedId} className="bg-slate-800/80 border-rose-500/30 p-4">
+                {localFavorites.gifts.map((gift) => (
+                  <Card key={gift.id} className="bg-slate-800/80 border-rose-500/30 p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h3 className="text-white font-bold mb-1">{item.name}</h3>
-                        <p className="text-slate-300 text-sm mb-2">{item.description}</p>
-                        {item.price && (
-                          <p className="text-rose-400 font-semibold text-sm">{item.price}</p>
+                        <h3 className="text-white font-bold mb-1">{gift.name}</h3>
+                        <p className="text-slate-300 text-sm mb-2">{gift.description}</p>
+                        {gift.price && (
+                          <p className="text-rose-400 font-semibold text-sm">{gift.price}</p>
                         )}
                         <p className="text-slate-500 text-xs mt-2">
-                          Ruajtur: {new Date(item.savedAt).toLocaleDateString()}
+                          Ruajtur: {new Date(gift.savedAt).toLocaleDateString('sq-AL')}
                         </p>
                       </div>
                       <button
-                        onClick={() => handleRemoveSaved(item.savedId)}
-                        className="text-red-400 hover:text-red-300 transition-colors"
+                        onClick={() => {
+                          removeGiftFavorite(gift.id);
+                          setLocalFavorites(getFavorites());
+                        }}
+                        className="p-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-red-400 transition-colors"
                       >
-                        <Trash2 className="w-5 h-5" />
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </Card>
@@ -426,28 +502,31 @@ export default function UserProfile({ onLogout }) {
           )}
 
           {/* Saved Tips */}
-          {savedItems.tips.length > 0 && (
+          {localFavorites.tips.length > 0 && (
             <div>
               <h2 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
                 <Lightbulb className="w-5 h-5 text-amber-400" />
-                Këshilla të Ruajtura ({savedItems.tips.length})
+                Këshilla të Ruajtura ({localFavorites.tips.length})
               </h2>
               <div className="space-y-3">
-                {savedItems.tips.map((item) => (
-                  <Card key={item.savedId} className="bg-slate-800/80 border-amber-500/30 p-4">
+                {localFavorites.tips.map((tip) => (
+                  <Card key={tip.id} className="bg-slate-800/80 border-amber-500/30 p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h3 className="text-white font-bold mb-1">{item.title}</h3>
-                        <p className="text-slate-300 text-sm">{item.content}</p>
+                        <h3 className="text-white font-bold mb-1">{tip.title || 'Këshillë'}</h3>
+                        <p className="text-slate-300 text-sm">{tip.content}</p>
                         <p className="text-slate-500 text-xs mt-2">
-                          Ruajtur: {new Date(item.savedAt).toLocaleDateString()}
+                          Ruajtur: {new Date(tip.savedAt).toLocaleDateString('sq-AL')}
                         </p>
                       </div>
                       <button
-                        onClick={() => handleRemoveSaved(item.savedId)}
-                        className="text-red-400 hover:text-red-300 transition-colors"
+                        onClick={() => {
+                          removeTipFavorite(tip.id);
+                          setLocalFavorites(getFavorites());
+                        }}
+                        className="p-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-red-400 transition-colors"
                       >
-                        <Trash2 className="w-5 h-5" />
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </Card>
@@ -457,7 +536,7 @@ export default function UserProfile({ onLogout }) {
           )}
 
           {/* Empty State */}
-          {savedItems.dates.length === 0 && savedItems.gifts.length === 0 && savedItems.tips.length === 0 && (
+          {localFavorites.venues.length === 0 && localFavorites.dateIdeas.length === 0 && localFavorites.gifts.length === 0 && localFavorites.tips.length === 0 && (
             <div className="text-center py-12">
               <Bookmark className="w-16 h-16 text-slate-600 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-white mb-2">Asnjë element i ruajtur</h3>
