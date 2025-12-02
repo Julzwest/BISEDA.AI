@@ -9,6 +9,10 @@ export default function GuestBanner({ onSignUp }) {
   const isGuest = localStorage.getItem('isGuest') === 'true';
   if (!isGuest) return null;
 
+  // Get unique visitor number
+  const guestNumber = localStorage.getItem('guestNumber') || '';
+  const visitorLabel = guestNumber ? `Vizitor #${guestNumber}` : 'Vizitor';
+
   // Dismissed state - show minimal indicator
   if (dismissed) {
     return (
@@ -17,7 +21,7 @@ export default function GuestBanner({ onSignUp }) {
         className="px-2 py-1 bg-slate-800/90 border border-slate-700 rounded-full flex items-center gap-1.5 hover:bg-slate-700/90 transition-all"
       >
         <UserX className="w-3 h-3 text-cyan-400" />
-        <span className="text-xs font-medium text-white">Vizitor</span>
+        <span className="text-xs font-medium text-white">{visitorLabel}</span>
       </button>
     );
   }
@@ -32,7 +36,7 @@ export default function GuestBanner({ onSignUp }) {
         </div>
         <div className="hidden sm:block">
           <p className="text-[10px] text-slate-400 leading-tight">Mënyra</p>
-          <p className="text-xs font-bold text-white leading-tight">Vizitor</p>
+          <p className="text-xs font-bold text-white leading-tight">{visitorLabel}</p>
         </div>
       </div>
 
