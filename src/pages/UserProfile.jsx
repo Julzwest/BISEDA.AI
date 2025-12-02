@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { 
   User, Mail, Phone, Crown, Zap, TrendingUp, Bookmark, 
   Heart, Gift, Lightbulb, Calendar, Trash2, ExternalLink,
-  CreditCard, LogOut, Shield, Star, MapPin
+  CreditCard, LogOut, Shield, Star, MapPin, Globe, Check
 } from 'lucide-react';
 import { getBackendUrl } from '@/utils/getBackendUrl';
 import UpgradeModal from '@/components/UpgradeModal';
+import { countries, getCitiesForCountry, getCountryByCode } from '@/config/countries';
 
 export default function UserProfile({ onLogout }) {
   const [userInfo, setUserInfo] = useState(null);
@@ -16,11 +17,25 @@ export default function UserProfile({ onLogout }) {
   const [loading, setLoading] = useState(true);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [userCountry, setUserCountry] = useState(localStorage.getItem('userCountry') || 'AL');
+  const [userCity, setUserCity] = useState(localStorage.getItem('userCity') || '');
+  const [isEditingLocation, setIsEditingLocation] = useState(false);
+  const [locationSaved, setLocationSaved] = useState(false);
 
   const backendUrl = getBackendUrl();
   const userId = localStorage.getItem('userId');
   const userName = localStorage.getItem('userName') || 'User';
   const userEmail = localStorage.getItem('userEmail') || '';
+
+  const handleSaveLocation = () => {
+    localStorage.setItem('userCountry', userCountry);
+    localStorage.setItem('userCity', userCity);
+    setIsEditingLocation(false);
+    setLocationSaved(true);
+    setTimeout(() => setLocationSaved(false), 2000);
+  };
+
+  const currentCountry = getCountryByCode(userCountry);
 
   useEffect(() => {
     fetchData();
@@ -227,6 +242,102 @@ export default function UserProfile({ onLogout }) {
                 </div>
               )}
             </div>
+          </Card>
+
+          {/* Location Settings */}
+          <Card className="bg-slate-800/80 border-slate-700 p-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Globe className="w-5 h-5 text-cyan-400" />
+                Vendndodhja
+              </h2>
+              {!isEditingLocation && (
+                <Button
+                  onClick={() => setIsEditingLocation(true)}
+                  className="bg-slate-700 hover:bg-slate-600 text-white text-sm h-8"
+                >
+                  Ndrysho
+                </Button>
+              )}
+            </div>
+
+            {!isEditingLocation ? (
+              <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-xl">
+                <span className="text-3xl">{currentCountry?.flag || '🌍'}</span>
+                <div>
+                  <p className="text-white font-bold">{currentCountry?.name || 'Pa vendosur'}</p>
+                  <p className="text-slate-400 text-sm">{userCity || 'Zgjidh qytetin'}</p>
+                </div>
+                {locationSaved && (
+                  <div className="ml-auto flex items-center gap-1 text-green-400">
+                    <Check className="w-4 h-4" />
+                    <span className="text-sm">Ruajtur!</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Shteti
+                  </label>
+                  <select
+                    value={userCountry}
+                    onChange={(e) => {
+                      setUserCountry(e.target.value);
+                      setUserCity(''); // Reset city when country changes
+                    }}
+                    className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-purple-500"
+                    style={{ fontSize: '16px' }}
+                  >
+                    {countries.map((country) => (
+                      <option key={country.code} value={country.code}>
+                        {country.flag} {country.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Qyteti
+                  </label>
+                  <select
+                    value={userCity}
+                    onChange={(e) => setUserCity(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-purple-500"
+                    style={{ fontSize: '16px' }}
+                  >
+                    <option value="">Zgjidh qytetin...</option>
+                    {getCitiesForCountry(userCountry).map((city) => (
+                      <option key={city.nameEn} value={city.name}>
+                        {city.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleSaveLocation}
+                    className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white"
+                  >
+                    <Check className="w-4 h-4 mr-2" />
+                    Ruaj Vendndodhjen
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setUserCountry(localStorage.getItem('userCountry') || 'AL');
+                      setUserCity(localStorage.getItem('userCity') || '');
+                      setIsEditingLocation(false);
+                    }}
+                    className="bg-slate-700 hover:bg-slate-600 text-white"
+                  >
+                    Anulo
+                  </Button>
+                </div>
+              </div>
+            )}
           </Card>
 
           {/* Logout Button */}

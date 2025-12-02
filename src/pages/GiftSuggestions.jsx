@@ -1,12 +1,19 @@
 import React, { useState } from 'react';
-import { Gift, Heart, Sparkles, ShoppingBag, Star, TrendingUp, ExternalLink, MapPin, Store } from 'lucide-react';
+import { Gift, Heart, Sparkles, ShoppingBag, Star, TrendingUp, ExternalLink, MapPin, Store, Globe } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { SaveButton } from '@/components/SaveButton';
 import { base44 } from '@/api/base44Client';
+import { countries, getCitiesForCountry, getCountryByCode, getCityNameEn, getCurrencySymbol } from '@/config/countries';
 
 export default function GiftSuggestions() {
   const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://biseda-ai.onrender.com';
+  
+  // Get user's country from localStorage
+  const userCountry = localStorage.getItem('userCountry') || 'AL';
+  const currentCountry = getCountryByCode(userCountry);
+  const currencySymbol = getCurrencySymbol(userCountry);
+  const cities = getCitiesForCountry(userCountry).map(c => c.name);
   
   const [partnerInterests, setPartnerInterests] = useState('');
   const [occasion, setOccasion] = useState('');
@@ -19,10 +26,6 @@ export default function GiftSuggestions() {
   const [isLoadingMoreShops, setIsLoadingMoreShops] = useState(false);
   const [debugInfo, setDebugInfo] = useState('');
 
-  const cities = [
-    'Tiranë', 'Durrës', 'Vlorë', 'Shkodër', 'Korçë', 'Elbasan', 'Fier', 'Gjirokastër', 'Berat'
-  ];
-
   const occasions = [
     { id: 'birthday', name: 'Ditëlindje', icon: '🎂' },
     { id: 'anniversary', name: 'Përvjetor', icon: '💕' },
@@ -32,12 +35,46 @@ export default function GiftSuggestions() {
     { id: 'justbecause', name: 'Thjesht sepse', icon: '💝' }
   ];
 
-  const budgets = [
-    { id: 'low', name: '€10-30', value: 'low' },
-    { id: 'medium', name: '€30-100', value: 'medium' },
-    { id: 'high', name: '€100-300', value: 'high' },
-    { id: 'premium', name: '€300+', value: 'premium' }
-  ];
+  // Dynamic budgets based on currency
+  const getBudgets = () => {
+    if (currencySymbol === '£') {
+      return [
+        { id: 'low', name: '£10-30', value: 'low' },
+        { id: 'medium', name: '£30-100', value: 'medium' },
+        { id: 'high', name: '£100-250', value: 'high' },
+        { id: 'premium', name: '£250+', value: 'premium' }
+      ];
+    } else if (currencySymbol === '$') {
+      return [
+        { id: 'low', name: '$15-40', value: 'low' },
+        { id: 'medium', name: '$40-120', value: 'medium' },
+        { id: 'high', name: '$120-350', value: 'high' },
+        { id: 'premium', name: '$350+', value: 'premium' }
+      ];
+    } else if (currencySymbol === 'CHF') {
+      return [
+        { id: 'low', name: 'CHF 15-40', value: 'low' },
+        { id: 'medium', name: 'CHF 40-120', value: 'medium' },
+        { id: 'high', name: 'CHF 120-350', value: 'high' },
+        { id: 'premium', name: 'CHF 350+', value: 'premium' }
+      ];
+    } else if (currencySymbol === 'L') {
+      return [
+        { id: 'low', name: 'L 1,500-4,000', value: 'low' },
+        { id: 'medium', name: 'L 4,000-12,000', value: 'medium' },
+        { id: 'high', name: 'L 12,000-35,000', value: 'high' },
+        { id: 'premium', name: 'L 35,000+', value: 'premium' }
+      ];
+    }
+    return [
+      { id: 'low', name: '€10-30', value: 'low' },
+      { id: 'medium', name: '€30-100', value: 'medium' },
+      { id: 'high', name: '€100-300', value: 'high' },
+      { id: 'premium', name: '€300+', value: 'premium' }
+    ];
+  };
+  
+  const budgets = getBudgets();
 
   const generateGiftSuggestions = async () => {
     if (!partnerInterests.trim()) {
@@ -205,7 +242,11 @@ RULES:
     }
 
     try {
-      console.log('🏪 Searching for local shops in', selectedCity, isLoadMore ? '(loading more)' : '');
+      // Get English names for Google Places API
+      const cityNameEn = getCityNameEn(userCountry, selectedCity);
+      const countryNameEn = currentCountry?.nameEn || 'Albania';
+      
+      console.log('🏪 Searching for local shops in', cityNameEn, countryNameEn, isLoadMore ? '(loading more)' : '');
       
       // Search for gift-related shops based on interests
       const shopQuery = `gift shops jewelry stores flower shops boutiques bookstores ${partnerInterests || ''}`;
@@ -217,7 +258,7 @@ RULES:
         },
         body: JSON.stringify({
           query: shopQuery,
-          location: selectedCity,
+          location: `${cityNameEn}, ${countryNameEn}`,
           category: 'gifts'
         })
       });
@@ -404,6 +445,19 @@ RULES:
               {bud.name}
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* Current Country Display */}
+      <div className="mb-4 p-3 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-xl">
+        <div className="flex items-center gap-2">
+          <Globe className="w-4 h-4 text-cyan-400" />
+          <span className="text-cyan-300 text-sm font-medium">
+            Vendndodhja: {currentCountry?.flag} {currentCountry?.name}
+          </span>
+          <a href="#/profile" className="ml-auto text-xs text-cyan-400 hover:text-cyan-300 underline">
+            Ndrysho
+          </a>
         </div>
       </div>
 

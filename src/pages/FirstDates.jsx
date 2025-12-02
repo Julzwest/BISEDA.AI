@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Coffee, UtensilsCrossed, Film, Music, Dumbbell, Palette, TreePine, Sparkles, Heart, Star, Crown, TrendingUp } from 'lucide-react';
+import { MapPin, Coffee, UtensilsCrossed, Film, Music, Dumbbell, Palette, TreePine, Sparkles, Heart, Star, Crown, TrendingUp, Globe } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { SaveButton } from '@/components/SaveButton';
 import { getBackendUrl } from '@/utils/getBackendUrl';
 import { base44 } from '@/api/base44Client';
+import { countries, getCitiesForCountry, getCountryByCode, getCityNameEn } from '@/config/countries';
 
 const backendUrl = getBackendUrl();
 
@@ -14,10 +15,11 @@ export default function FirstDates() {
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-
-  const cities = [
-    'Tiranë', 'Durrës', 'Vlorë', 'Shkodër', 'Korçë', 'Elbasan', 'Fier', 'Gjirokastër', 'Berat', 'Kavajë', 'Lezhë', 'Pogradec', 'Sarandë', 'Himara'
-  ];
+  
+  // Get user's country from localStorage
+  const userCountry = localStorage.getItem('userCountry') || 'AL';
+  const currentCountry = getCountryByCode(userCountry);
+  const cities = getCitiesForCountry(userCountry).map(c => c.name);
 
   const categories = [
     {
@@ -256,14 +258,18 @@ export default function FirstDates() {
       let useGooglePlaces = true;
       
       try {
-        const placesResponse = await fetch(`${backendUrl}/api/places/search`, {
+        // Get English names for Google Places API
+      const cityNameEn = getCityNameEn(userCountry, city);
+      const countryNameEn = currentCountry?.nameEn || 'Albania';
+      
+      const placesResponse = await fetch(`${backendUrl}/api/places/search`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             query: categoryNames[category.id] || category.name,
-            location: city,
+            location: `${cityNameEn}, ${countryNameEn}`,
             category: category.id
           })
         });
@@ -329,7 +335,7 @@ export default function FirstDates() {
       const alreadyShown = isLoadMore ? suggestions.map(s => s.name).join(', ') : '';
       const excludeText = alreadyShown ? `\n\nMOS përfshi këto biznese që u treguan më parë: ${alreadyShown}\n\nGjej biznese të REJA dhe të ndryshme!` : '';
       
-      const prompt = `Biznese REALE në ${city}, Shqipëri për takime të para: ${categoryNames[category.id] || category.name}${excludeText}
+      const prompt = `Biznese REALE në ${cityNameEn}, ${countryNameEn} për takime të para: ${categoryNames[category.id] || category.name}${excludeText}
 
 Listoni 5-7 vende që ekzistojnë realisht. Ktheni VETËM JSON array:
 [{"name":"Emri","description":"Përshkrim","location":"Adresa","rating":"4.5","price":"$$"}]
@@ -341,7 +347,7 @@ Mos shtoni tekst tjetër, VETËM JSON.`;
       const response = await base44.integrations.Core.InvokeLLM({ 
         prompt,
         conversationHistory: [],
-        systemPrompt: `Ti njeh ${city}, Shqipëri shumë mirë. Return ONLY a JSON array of REAL businesses that exist in ${city}. No explanations, no markdown, just the JSON array.${systemPromptExtra}`
+        systemPrompt: `Ti njeh ${cityNameEn}, ${countryNameEn} shumë mirë. Return ONLY a JSON array of REAL businesses that exist in ${cityNameEn}. No explanations, no markdown, just the JSON array.${systemPromptExtra}`
       });
 
       // Parse the response
@@ -371,7 +377,7 @@ Mos shtoni tekst tjetër, VETËM JSON.`;
         location: suggestion.location || city,
         rating: suggestion.rating || '4.5',
         price: suggestion.price || '$$',
-        googleMapsLink: `https://maps.google.com/?q=${encodeURIComponent(suggestion.name || 'Biznes')},${encodeURIComponent(city)},Albania`,
+        googleMapsLink: `https://maps.google.com/?q=${encodeURIComponent(suggestion.name || 'Biznes')},${encodeURIComponent(cityNameEn)},${encodeURIComponent(countryNameEn)}`,
         featured: index === 0 && !isLoadMore, // Mark first as featured only on initial load
         sponsored: false,
         source: 'ai'
@@ -416,6 +422,19 @@ Mos shtoni tekst tjetër, VETËM JSON.`;
           Takime të Para 💕
         </h1>
         <p className="text-slate-400 text-sm">Gjej ide perfekte për takimin e parë</p>
+      </div>
+
+      {/* Current Country Display */}
+      <div className="mb-4 p-3 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-xl">
+        <div className="flex items-center gap-2">
+          <Globe className="w-4 h-4 text-cyan-400" />
+          <span className="text-cyan-300 text-sm font-medium">
+            Vendndodhja: {currentCountry?.flag} {currentCountry?.name}
+          </span>
+          <a href="#/profile" className="ml-auto text-xs text-cyan-400 hover:text-cyan-300 underline">
+            Ndrysho
+          </a>
+        </div>
       </div>
 
       {/* City Selection */}

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Mail, Lock, User, Phone, Eye, EyeOff, Apple, Sparkles } from 'lucide-react';
+import { MessageSquare, Mail, Lock, User, Phone, Eye, EyeOff, Apple, Sparkles, Globe, MapPin } from 'lucide-react';
 import { getBackendUrl } from '@/utils/getBackendUrl';
+import { countries, getCitiesForCountry } from '@/config/countries';
 
 export default function Auth({ onAuthSuccess }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -10,7 +11,9 @@ export default function Auth({ onAuthSuccess }) {
     username: '',
     email: '',
     phoneNumber: '',
-    password: ''
+    password: '',
+    country: 'AL',
+    city: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -53,6 +56,12 @@ export default function Auth({ onAuthSuccess }) {
         localStorage.setItem('userEmail', data.user.email);
         localStorage.setItem('userName', data.user.username);
         localStorage.setItem('isAuthenticated', 'true');
+        
+        // Store location data (for new users or update existing)
+        if (!isLogin || formData.country) {
+          localStorage.setItem('userCountry', formData.country || 'AL');
+          localStorage.setItem('userCity', formData.city || '');
+        }
         
         // Call success callback
         if (onAuthSuccess) {
@@ -267,6 +276,63 @@ export default function Auth({ onAuthSuccess }) {
                     placeholder="+355 XX XXX XXXX"
                     style={{ fontSize: '16px' }}
                   />
+                </div>
+              </div>
+            )}
+
+            {/* Country Selection (only for signup) */}
+            {!isLogin && (
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Ku jeton? <span className="text-purple-400 text-xs">🌍</span>
+                </label>
+                <div className="relative">
+                  <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                  <select
+                    name="country"
+                    value={formData.country}
+                    onChange={(e) => {
+                      setFormData({
+                        ...formData,
+                        country: e.target.value,
+                        city: '' // Reset city when country changes
+                      });
+                    }}
+                    className="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-purple-500 appearance-none cursor-pointer"
+                    style={{ fontSize: '16px' }}
+                  >
+                    {countries.map((country) => (
+                      <option key={country.code} value={country.code}>
+                        {country.flag} {country.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {/* City Selection (only for signup) */}
+            {!isLogin && formData.country && (
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Qyteti
+                </label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                  <select
+                    name="city"
+                    value={formData.city}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-purple-500 appearance-none cursor-pointer"
+                    style={{ fontSize: '16px' }}
+                  >
+                    <option value="">Zgjidh qytetin...</option>
+                    {getCitiesForCountry(formData.country).map((city) => (
+                      <option key={city.nameEn} value={city.name}>
+                        {city.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             )}
