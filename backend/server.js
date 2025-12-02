@@ -660,23 +660,33 @@ app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password, appleId } = req.body;
     
-    // Find user by email or Apple ID
+    // Find user by email, username, or Apple ID
     let userAccount;
     if (appleId) {
       userAccount = Array.from(userAccounts.values()).find(u => u.appleId === appleId);
     } else {
       if (!email || !password) {
         return res.status(400).json({ 
-          error: 'Email and password are required' 
+          error: 'Email/username and password are required' 
         });
       }
       
-      userAccount = Array.from(userAccounts.values()).find(u => u.email === email);
+      // Check if input is email or username
+      const isEmail = email.includes('@');
+      
+      if (isEmail) {
+        userAccount = Array.from(userAccounts.values()).find(u => u.email === email);
+      } else {
+        // Search by username (case insensitive)
+        userAccount = Array.from(userAccounts.values()).find(
+          u => u.username && u.username.toLowerCase() === email.toLowerCase()
+        );
+      }
       
       // Verify password
       if (!userAccount || userAccount.password !== password) {
         return res.status(401).json({ 
-          error: 'Invalid email or password' 
+          error: 'Email/username ose fjalëkalimi i gabuar' 
         });
       }
     }

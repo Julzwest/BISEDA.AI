@@ -308,20 +308,20 @@ export default function Auth({ onAuthSuccess }) {
               </div>
             )}
 
-            {/* Email */}
+            {/* Email or Username */}
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
-                Email
+                {isLogin ? 'Email ose Username' : 'Email'}
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                 <input
-                  type="email"
+                  type={isLogin ? "text" : "email"}
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
                   className="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
-                  placeholder="email@shembull.com"
+                  placeholder={isLogin ? "email ose username" : "email@shembull.com"}
                   required
                   style={{ fontSize: '16px' }}
                 />
