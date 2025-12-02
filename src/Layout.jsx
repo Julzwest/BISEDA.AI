@@ -18,9 +18,8 @@ export default function Layout({ children, onLogout }) {
   return (
     <>
       <style>{`
-        body {
-          background: linear-gradient(to bottom right, #020617, #0f172a, #1e1b4b);
-          overflow-y: scroll;
+        html, body {
+          background: #0f172a !important;
           -webkit-overflow-scrolling: touch;
         }
         
@@ -31,7 +30,21 @@ export default function Layout({ children, onLogout }) {
         .nav-active {
           color: #fbbf24;
         }
+        
+        /* Cover the entire bottom area including home indicator */
+        .bottom-safe-area {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: env(safe-area-inset-bottom, 0px);
+          background: #0f172a;
+          z-index: 9998;
+        }
       `}</style>
+      
+      {/* Cover for safe area at bottom */}
+      <div className="bottom-safe-area"></div>
       
       {/* Top Bar with User Profile Link */}
       <div style={{ position: 'fixed', top: '16px', right: '16px', zIndex: 9999 }}>
@@ -53,12 +66,10 @@ export default function Layout({ children, onLogout }) {
         bottom: 0, 
         left: 0, 
         right: 0, 
-        height: '80px',
-        backgroundColor: 'rgba(15, 23, 42, 0.98)',
-        backdropFilter: 'blur(12px)',
+        backgroundColor: '#0f172a',
         borderTop: '1px solid rgba(148, 163, 184, 0.1)',
         zIndex: 9999,
-        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 10px)'
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)'
       }}>
         <div className={`flex ${navItems.length === 4 ? 'justify-between' : 'justify-around'} items-center h-full px-3`}>
           {navItems.map((item) => {
