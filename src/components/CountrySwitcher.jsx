@@ -60,7 +60,7 @@ export default function CountrySwitcher() {
 
       {/* Modal */}
       {isOpen && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center" style={{ padding: '24px', paddingTop: 'max(24px, env(safe-area-inset-top))' }}>
           {/* Backdrop */}
           <div 
             className="absolute inset-0 bg-black/70 backdrop-blur-md"
@@ -71,7 +71,7 @@ export default function CountrySwitcher() {
           <div 
             ref={modalRef}
             className="relative w-full max-w-sm bg-slate-900 border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden"
-            style={{ maxHeight: 'min(80vh, 600px)' }}
+            style={{ maxHeight: 'min(70vh, 550px)', marginTop: '20px' }}
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-slate-700/50 bg-slate-900/95 sticky top-0 z-10">
