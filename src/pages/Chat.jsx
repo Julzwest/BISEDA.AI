@@ -322,8 +322,7 @@ export default function Chat() {
     // Check limit before sending
     const canProceed = await checkUsage();
     if (!canProceed || isLimitReached) {
-      alert('Limiti ditor u arrit! Përmirëso planin ose bli kredite për të vazhduar.');
-      setShowUpgradeModal(true);
+      setShowLimitModal(true);
       return;
     }
 
@@ -365,8 +364,8 @@ export default function Chat() {
       if (error.code === 'LIMIT_EXCEEDED') {
         setIsLimitReached(true);
         await checkUsage();
-        setShowUpgradeModal(true);
-        const errorMessage = 'Limiti ditor u arrit! Përmirëso planin ose bli kredite për të vazhduar.';
+        setShowLimitModal(true);
+        const errorMessage = '☕ Hej! E ke përfunduar dozën ditore të dashurisë! Me çmimin e një kafeje në muaj, mund të bisedosh me mua 24/7. Çfarë thua - love over latte? 💕';
         setMessages(prev => [...prev, { role: 'assistant', content: errorMessage, timestamp: new Date() }]);
       } else {
         const errorMessage = error.message || 'Më vjen keq, pati një gabim. Mund të provosh përsëri?';
@@ -548,7 +547,7 @@ export default function Chat() {
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={isLimitReached ? "🚫 Limiti u arrit - Përmirëso për të vazhduar" : "Shkruaj mesazhin tënd këtu..."}
+                placeholder={isLimitReached ? "☕ Skip the coffee, get unlimited love! Tap upgrade 💕" : "Shkruaj mesazhin tënd këtu..."}
                 className={`flex-1 bg-slate-700 text-white px-4 py-3 rounded-lg border resize-none min-h-[60px] max-h-[120px] ${isLimitReached ? 'border-red-500/50 opacity-60' : 'border-slate-600 focus:outline-none focus:border-blue-500'}`}
                 rows={2}
                 disabled={isLoading || isLimitReached}
