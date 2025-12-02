@@ -50,10 +50,12 @@ const callOpenAI = async (prompt, conversationHistory = [], customSystemPrompt =
       if (errorData.code === 'LIMIT_EXCEEDED' || 
           errorData.code === 'SUBSCRIPTION_EXPIRED' || 
           errorData.code === 'ADULT_CONTENT_BLOCKED' ||
-          errorData.code === 'FEATURE_NOT_AVAILABLE') {
+          errorData.code === 'FEATURE_NOT_AVAILABLE' ||
+          errorData.code === 'SCREENSHOT_LIMIT_REACHED') {
         const error = new Error(errorData.error || 'Subscription error');
         error.code = errorData.code;
         error.upgradeRequired = errorData.upgradeRequired;
+        error.screenshotAnalyses = errorData.screenshotAnalyses;
         throw error;
       }
       

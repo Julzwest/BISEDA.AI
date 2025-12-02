@@ -23,6 +23,12 @@ class User {
       imageAnalyses: 0
     };
     
+    // Screenshot analysis (lifetime limit for free users)
+    this.screenshotAnalyses = {
+      totalUsed: 0,
+      freeLimit: 2 // 2 free analyses, then upgrade required
+    };
+    
     // Monthly usage (for analytics)
     this.monthlyUsage = {
       month: new Date().getMonth(),
@@ -176,6 +182,30 @@ class User {
     const limits = this.getLimits();
     return this.subscriptionTier !== 'free' && this.dailyUsage.imageAnalyses < limits.imageAnalysesPerDay;
   }
+  
+  // Check if user can analyze screenshot (2 free for free users)
+  canAnalyzeScreenshot() {
+    // Paid users have unlimited screenshot analyses
+    if (this.subscriptionTier !== 'free') {
+      return true;
+    }
+    // Free users get 2 lifetime analyses
+    return this.screenshotAnalyses.totalUsed < this.screenshotAnalyses.freeLimit;
+  }
+  
+  // Record screenshot analysis usage
+  recordScreenshotAnalysis() {
+    this.screenshotAnalyses.totalUsed++;
+    this.lastActiveAt = new Date();
+  }
+  
+  // Get remaining free screenshot analyses
+  getRemainingScreenshotAnalyses() {
+    if (this.subscriptionTier !== 'free') {
+      return -1; // Unlimited
+    }
+    return Math.max(0, this.screenshotAnalyses.freeLimit - this.screenshotAnalyses.totalUsed);
+  }
 
   // Get subscription limits (OPTIMIZED FOR PROFITABILITY)
   getLimits() {
@@ -296,6 +326,12 @@ class User {
         imageAnalyses: this.dailyUsage.imageAnalyses,
         imageAnalysesLimit: limits.imageAnalysesPerDay,
         remainingMessages: Math.max(0, limits.messagesPerDay - this.dailyUsage.messages)
+      },
+      screenshotAnalyses: {
+        used: this.screenshotAnalyses.totalUsed,
+        freeLimit: this.screenshotAnalyses.freeLimit,
+        remaining: this.getRemainingScreenshotAnalyses(),
+        canAnalyze: this.canAnalyzeScreenshot()
       },
       monthlyUsage: {
         totalMessages: this.monthlyUsage.totalMessages,

@@ -67,6 +67,8 @@ export default function Chat() {
   const [selectedImages, setSelectedImages] = useState([]);
   const [isLimitReached, setIsLimitReached] = useState(false);
   const [usage, setUsage] = useState(null);
+  const [screenshotUsage, setScreenshotUsage] = useState({ used: 0, freeLimit: 2, remaining: 2 });
+  const [showScreenshotLimitModal, setShowScreenshotLimitModal] = useState(false);
   const backendUrl = getBackendUrl();
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -241,6 +243,12 @@ export default function Chat() {
       if (response.ok) {
         const data = await response.json();
         setUsage(data);
+        
+        // Update screenshot usage
+        if (data.screenshotAnalyses) {
+          setScreenshotUsage(data.screenshotAnalyses);
+        }
+        
         const isBlocked = data.dailyUsage.remainingMessages === 0 && (!data.credits || data.credits === 0);
         setIsLimitReached(isBlocked);
         return !isBlocked;
@@ -360,8 +368,14 @@ export default function Chat() {
         stack: error.stack
       });
       
+      // Check if it's a screenshot limit error
+      if (error.code === 'SCREENSHOT_LIMIT_REACHED') {
+        setShowScreenshotLimitModal(true);
+        const errorMessage = '📸 Ke përdorur 2 analiza screenshot falas! Përmirëso planin për analiza të pakufizuara. Me çmimin e një kafeje në muaj, unë analizoj çdo screenshot për ty! ☕💕';
+        setMessages(prev => [...prev, { role: 'assistant', content: errorMessage, timestamp: new Date() }]);
+      }
       // Check if it's a limit error
-      if (error.code === 'LIMIT_EXCEEDED') {
+      else if (error.code === 'LIMIT_EXCEEDED') {
         setIsLimitReached(true);
         await checkUsage();
         setShowLimitModal(true);
@@ -533,15 +547,37 @@ export default function Chat() {
                 id="image-upload"
               />
               
-              {/* Upload button */}
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-3 rounded-lg h-auto self-end"
-                disabled={isLoading || selectedImages.length >= 4}
-                title="Ngarko foto"
-              >
-                <ImageIcon className="w-5 h-5" />
-              </Button>
+              {/* Upload button with screenshot count */}
+              <div className="relative">
+                <Button
+                  onClick={() => {
+                    if (screenshotUsage.remaining === 0 && usage?.tier === 'free') {
+                      setShowScreenshotLimitModal(true);
+                    } else {
+                      fileInputRef.current?.click();
+                    }
+                  }}
+                  className={`px-4 py-3 rounded-lg h-auto self-end ${
+                    screenshotUsage.remaining === 0 && usage?.tier === 'free'
+                      ? 'bg-orange-600 hover:bg-orange-700'
+                      : 'bg-slate-700 hover:bg-slate-600'
+                  } text-white`}
+                  disabled={isLoading || selectedImages.length >= 4}
+                  title={screenshotUsage.remaining > 0 ? `${screenshotUsage.remaining} analiza falas mbetur` : 'Përmirëso për analiza screenshot'}
+                >
+                  <ImageIcon className="w-5 h-5" />
+                </Button>
+                {/* Badge showing remaining free analyses */}
+                {usage?.tier === 'free' && screenshotUsage.remaining >= 0 && (
+                  <span className={`absolute -top-2 -right-2 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center ${
+                    screenshotUsage.remaining === 0 
+                      ? 'bg-red-500 text-white' 
+                      : 'bg-green-500 text-white'
+                  }`}>
+                    {screenshotUsage.remaining}
+                  </span>
+                )}
+              </div>
               
               <textarea
                 value={inputText}
@@ -578,6 +614,17 @@ export default function Chat() {
               Shtyp Enter për të dërguar, Shift+Enter për rresht të ri
               {selectedImages.length > 0 && ` • ${selectedImages.length}/4 foto të zgjedhura`}
             </p>
+            {/* Screenshot analysis info */}
+            {usage?.tier === 'free' && (
+              <p className="text-xs mt-1 flex items-center gap-1">
+                <span className="text-purple-400">📸</span>
+                <span className={screenshotUsage.remaining === 0 ? 'text-red-400' : 'text-green-400'}>
+                  {screenshotUsage.remaining === 0 
+                    ? 'Ke përdorur 2 analiza falas - Përmirëso për më shumë!'
+                    : `${screenshotUsage.remaining}/2 analiza screenshot falas`}
+                </span>
+              </p>
+            )}
           </div>
         </Card>
       </div>
@@ -607,6 +654,70 @@ export default function Chat() {
           setShowUpgradeModal(false);
         }}
       />
+
+      {/* Screenshot Limit Modal */}
+      {showScreenshotLimitModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="bg-slate-800 border-purple-500/50 max-w-md w-full">
+            <div className="p-6">
+              <div className="flex flex-col items-center text-center mb-6">
+                <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center mb-4 animate-bounce">
+                  <ImageIcon className="w-10 h-10 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-2">📸 Analiza Screenshot</h2>
+                <p className="text-slate-300 text-sm mb-4">
+                  Ke përdorur <span className="text-pink-400 font-bold">2 analiza falas</span>!
+                </p>
+                <p className="text-slate-400 text-xs">
+                  Me çmimin e një kafeje në muaj, unë analizoj screenshot-et e tua, 
+                  të ndihmoj me përgjigjet perfekte, dhe të bëhem wing-man-i yt personal! ☕💕
+                </p>
+              </div>
+
+              <div className="bg-slate-900/50 rounded-xl p-4 mb-6">
+                <h3 className="text-white font-semibold mb-2">Çfarë mund të analizoj?</h3>
+                <ul className="text-slate-300 text-sm space-y-2">
+                  <li className="flex items-center gap-2">
+                    <span className="text-green-400">✓</span>
+                    Chat screenshot - të jap përgjigje perfekte
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-green-400">✓</span>
+                    Profile dating - të ndihmoj ta optimizosh
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-green-400">✓</span>
+                    Mesazhe konfuze - t'i deshifroj për ty
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-green-400">✓</span>
+                    Situata sociale - të jap këshilla
+                  </li>
+                </ul>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <Button
+                  onClick={() => {
+                    setShowScreenshotLimitModal(false);
+                    setShowUpgradeModal(true);
+                  }}
+                  className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-semibold h-12 flex items-center justify-center gap-2"
+                >
+                  <ImageIcon className="w-5 h-5" />
+                  Përmirëso për Analiza të Pakufizuara
+                </Button>
+                <Button
+                  onClick={() => setShowScreenshotLimitModal(false)}
+                  className="w-full bg-slate-700 hover:bg-slate-600 text-white h-11"
+                >
+                  Vazhdo pa foto
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

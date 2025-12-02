@@ -37,7 +37,7 @@ export default function Auth({ onAuthSuccess }) {
     try {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
       const body = isLogin 
-        ? { email: formData.email, password: formData.password }
+        ? { identifier: formData.email, password: formData.password }
         : formData;
 
       const response = await fetch(`${backendUrl}${endpoint}`, {

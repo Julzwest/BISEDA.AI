@@ -355,6 +355,21 @@ app.post('/api/chat', rateLimit, checkSubscriptionLimits, async (req, res) => {
       
       // Add current user message with images if provided
       if (fileUrls && fileUrls.length > 0) {
+        // Check screenshot analysis limit
+        if (!user.canAnalyzeScreenshot()) {
+          return res.status(403).json({
+            error: 'Ke përdorur 2 analiza screenshot falas! Përmirëso planin për analiza të pakufizuara 📸',
+            code: 'SCREENSHOT_LIMIT_REACHED',
+            upgradeRequired: true,
+            screenshotAnalyses: user.screenshotAnalyses
+          });
+        }
+        
+        // Record screenshot analysis usage
+        user.recordScreenshotAnalysis();
+        saveUser(user);
+        console.log(`📸 Screenshot analysis ${user.screenshotAnalyses.totalUsed}/${user.screenshotAnalyses.freeLimit} used`);
+        
         const imageContents = fileUrls.map((url) => ({
           type: 'image_url',
           image_url: { url: url }
