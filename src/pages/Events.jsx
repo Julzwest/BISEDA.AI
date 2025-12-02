@@ -288,69 +288,59 @@ export default function Events() {
         <p className="text-slate-400 text-sm">Gjej vende eventesh dhe argëtimi në qytetin tënd</p>
       </div>
 
-      {/* 🎯 GENIUS INTEGRATION: Upcoming Festive Dates Countdown */}
+      {/* 🎯 Upcoming Festive Dates Countdown - Modern Design */}
       {nextFestive && (
         <div className="mb-6">
-          {/* Main Countdown Card */}
+          {/* Main Countdown Card - Glassmorphism Style */}
           <div 
-            className={`relative overflow-hidden rounded-2xl bg-gradient-to-r ${nextFestive.color} p-[2px] cursor-pointer group`}
+            className="relative overflow-hidden rounded-3xl cursor-pointer group"
             onClick={() => setShowAllFestive(!showAllFestive)}
+            style={{
+              background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(16, 185, 129, 0.1) 50%, rgba(20, 184, 166, 0.15) 100%)',
+              border: '1px solid rgba(34, 197, 94, 0.3)'
+            }}
           >
-            <div className="relative bg-slate-900/95 backdrop-blur-xl rounded-2xl p-4">
-              {/* Animated background effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-white/5 via-transparent to-white/5 animate-pulse rounded-2xl" />
+            <div className="relative p-5">
+              {/* Subtle glow effect */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 rounded-full blur-3xl" />
               
               <div className="relative flex items-center gap-4">
-                {/* Emoji with pulse */}
-                <div className="relative">
-                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${nextFestive.color} flex items-center justify-center shadow-lg`}>
-                    <span className="text-2xl">{nextFestive.emoji}</span>
+                {/* Icon with modern styling */}
+                <div className="relative shrink-0">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                    <span className="text-3xl">{nextFestive.emoji}</span>
                   </div>
-                  {nextFestive.daysUntil <= 7 && (
-                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center animate-bounce">
-                      <span className="text-[10px] text-white font-bold">!</span>
-                    </div>
-                  )}
                 </div>
                 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs text-slate-400 uppercase tracking-wider">Festa e ardhshme</span>
-                    {nextFestive.daysUntil <= 3 && (
-                      <span className="px-2 py-0.5 bg-red-500/20 border border-red-500/50 rounded-full text-[10px] text-red-300 font-semibold animate-pulse">
-                        Shumë afër!
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="text-white font-bold text-lg truncate">{nextFestive.name}</h3>
-                  <div className="flex items-center gap-3 mt-1">
-                    <div className="flex items-center gap-1 text-slate-300 text-sm">
-                      <Calendar className="w-3.5 h-3.5" />
-                      <span>{nextFestive.date} {months[nextFestive.month]}</span>
-                    </div>
+                  <span className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">Festa e ardhshme</span>
+                  <h3 className="text-white font-bold text-xl mt-1 truncate">{nextFestive.name}</h3>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Calendar className="w-4 h-4 text-emerald-400" />
+                    <span className="text-emerald-200 text-sm font-medium">{nextFestive.date} {months[nextFestive.month]}</span>
                   </div>
                 </div>
                 
-                {/* Countdown */}
-                <div className="text-right">
-                  <div className={`text-3xl font-black bg-gradient-to-r ${nextFestive.color} bg-clip-text text-transparent`}>
+                {/* Countdown - Big and Bold */}
+                <div className="text-center shrink-0">
+                  <div className="text-4xl font-black text-emerald-400">
                     {nextFestive.daysUntil}
                   </div>
-                  <div className="text-xs text-slate-400">
-                    {nextFestive.daysUntil === 1 ? 'ditë' : 'ditë'}
+                  <div className="text-xs text-emerald-300/70 font-semibold uppercase tracking-wider">
+                    ditë
                   </div>
                 </div>
                 
                 {/* Expand indicator */}
-                <ChevronRight className={`w-5 h-5 text-slate-500 transition-transform duration-300 ${showAllFestive ? 'rotate-90' : ''}`} />
+                <ChevronRight className={`w-6 h-6 text-emerald-400/60 transition-transform duration-300 ${showAllFestive ? 'rotate-90' : ''}`} />
               </div>
               
-              {/* Suggestion text */}
-              <div className="mt-3 pt-3 border-t border-slate-800/50">
-                <p className="text-xs text-slate-400 flex items-center gap-2">
-                  <Sparkles className="w-3 h-3 text-yellow-400" />
-                  Planifiko një takim special për {nextFestive.name}! Kliko për më shumë data.
+              {/* Bottom hint */}
+              <div className="mt-4 pt-3 border-t border-emerald-500/20">
+                <p className="text-xs text-emerald-300/60 flex items-center gap-2">
+                  <Sparkles className="w-3 h-3" />
+                  Planifiko një takim special! Kliko për më shumë data festive.
                 </p>
               </div>
             </div>
@@ -492,89 +482,94 @@ export default function Events() {
 
           <div className="space-y-4">
             {localEvents.slice(0, visibleCount).map((venue, index) => (
-              <Card
+              <div
                 key={venue.id}
-                className="group overflow-hidden transition-all duration-300 hover:scale-[1.01] bg-gradient-to-r from-amber-900/30 via-orange-900/20 to-yellow-900/30 border border-yellow-500/30 shadow-lg shadow-yellow-500/5"
+                className="group relative overflow-hidden rounded-2xl transition-all duration-300 hover:scale-[1.01]"
                 style={{ 
+                  background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(168, 85, 247, 0.05) 50%, rgba(192, 132, 252, 0.1) 100%)',
+                  border: '1px solid rgba(168, 85, 247, 0.25)',
                   animationDelay: `${index * 50}ms`,
                   animation: 'fadeInUp 0.3s ease-out forwards'
                 }}
               >
-                <div className="p-4">
+                {/* Subtle glow */}
+                <div className="absolute top-0 left-0 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl" />
+                
+                <div className="relative p-4">
                   {/* Top badges */}
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       {venue.isOpen !== undefined && (
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                           venue.isOpen 
-                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                            : 'bg-red-500/20 text-red-400 border border-red-500/40'
+                            ? 'bg-emerald-500/20 text-emerald-400'
+                            : 'bg-red-500/20 text-red-400'
                         }`}>
                           {venue.isOpen ? '● Hapur' : '○ Mbyllur'}
                         </span>
                       )}
-                      <span className="px-2.5 py-1 bg-yellow-500/20 border border-yellow-500/40 rounded-full text-xs font-semibold text-yellow-300">
+                      <span className="px-3 py-1 bg-purple-500/20 rounded-full text-xs font-semibold text-purple-300">
                         ✓ Verified
                       </span>
                     </div>
                     {venue.rating && (
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-900/60 rounded-full">
-                        <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                        <span className="text-sm font-bold text-white">{venue.rating}</span>
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/20 rounded-full">
+                        <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                        <span className="text-sm font-bold text-amber-300">{venue.rating}</span>
                       </div>
                     )}
                   </div>
 
                   {/* Main content */}
                   <div className="flex items-start gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-yellow-500 to-orange-600 flex items-center justify-center shrink-0 text-white font-bold text-lg">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shrink-0 text-white font-bold text-lg shadow-lg shadow-purple-500/30">
                       {index + 1}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-white font-bold text-lg mb-1 truncate">{venue.name}</h3>
-                      <p className="text-slate-400 text-sm mb-3 line-clamp-2">{venue.description}</p>
+                      <h3 className="text-white font-bold text-lg mb-1">{venue.name}</h3>
+                      <p className="text-slate-400 text-sm mb-2 line-clamp-2">{venue.description}</p>
                       
                       {venue.location && (
                         <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-3">
-                          <MapPin className="w-3 h-3" />
+                          <MapPin className="w-3.5 h-3.5 text-purple-400" />
                           <span className="truncate">{venue.location}</span>
                         </div>
                       )}
 
-                        {/* Actions */}
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {venue.googleMapsLink && (
-                            <a
-                              href={venue.googleMapsLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-4 py-2 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/40 rounded-xl text-xs font-bold text-yellow-300 transition-all hover:scale-105"
-                            >
-                              <MapPin className="w-3.5 h-3.5" />
-                              Maps
-                            </a>
-                          )}
-                          
-                          {/* Ticket Search Button */}
-                          {venue.ticketSearchUrl && (
-                            <a
-                              href={venue.ticketSearchUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 rounded-xl text-xs font-bold text-purple-300 transition-all hover:scale-105"
-                            >
-                              <Ticket className="w-3.5 h-3.5" />
-                              Bileta
-                            </a>
-                          )}
+                      {/* Actions - Modern Buttons */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {venue.googleMapsLink && (
+                          <a
+                            href={venue.googleMapsLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 rounded-xl text-xs font-bold text-purple-300 transition-all hover:scale-105"
+                          >
+                            <MapPin className="w-3.5 h-3.5" />
+                            Google Maps
+                          </a>
+                        )}
                         
+                        {/* Ticket Search Button */}
+                        {venue.ticketSearchUrl && (
+                          <a
+                            href={venue.ticketSearchUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-pink-500/20 hover:bg-pink-500/30 rounded-xl text-xs font-bold text-pink-300 transition-all hover:scale-105"
+                          >
+                            <Ticket className="w-3.5 h-3.5" />
+                            Bileta
+                          </a>
+                        )}
+                      
                         {/* Favorite Button */}
                         <button
                           onClick={() => handleFavoriteToggle(venue)}
-                          className={`p-2.5 rounded-xl transition-all ${
+                          className={`p-2 rounded-xl transition-all ${
                             checkFavorite(venue)
-                              ? 'bg-pink-500/30 border border-pink-500/50 text-pink-300'
-                              : 'bg-slate-700/50 border border-slate-600/50 text-slate-400 hover:text-pink-300 hover:bg-pink-500/20'
+                              ? 'bg-pink-500/30 text-pink-300'
+                              : 'bg-slate-700/30 text-slate-400 hover:text-pink-300 hover:bg-pink-500/20'
                           }`}
                           title={checkFavorite(venue) ? 'Hiq nga të preferuarat' : 'Shto në të preferuara'}
                         >
@@ -596,7 +591,7 @@ export default function Events() {
                     </div>
                   </div>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
 

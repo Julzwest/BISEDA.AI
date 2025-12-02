@@ -4,15 +4,12 @@ import { createPageUrl } from './utils';
 import { Lightbulb, Home, Calendar, Bot, Flag, User, PartyPopper, Sparkles, MessageCircle, Heart, MapPin } from 'lucide-react';
 import CountrySwitcher from '@/components/CountrySwitcher';
 import GuestBanner from '@/components/GuestBanner';
-import ThemeSwitcher from '@/components/ThemeSwitcher';
 import { clearGuestSession } from '@/pages/Auth';
 import { trackPageView } from '@/utils/analytics';
-import { useTheme } from '@/contexts/ThemeContext';
 
 export default function Layout({ children, onLogout }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { themeConfig, isDark } = useTheme();
   const currentPageName = location.pathname.split('/')[1]?.charAt(0).toUpperCase() + location.pathname.split('/')[1]?.slice(1) || 'Home';
   const isGuest = localStorage.getItem('isGuest') === 'true';
 
@@ -107,9 +104,14 @@ export default function Layout({ children, onLogout }) {
         }}
       >
         <div className="h-full px-4 flex items-center justify-between max-w-screen-xl mx-auto">
-          {/* Left side - Country Switcher */}
+          {/* Left side - Logo/Brand */}
           <div className="flex items-center">
-            <CountrySwitcher />
+            <Link to="/home" className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-white" />
+              </div>
+              <span className="font-bold text-white text-lg hidden sm:block">Biseda<span className="text-purple-400">.ai</span></span>
+            </Link>
           </div>
           
           {/* Center - Guest Banner (if guest) */}
@@ -126,9 +128,9 @@ export default function Layout({ children, onLogout }) {
             />
           )}
           
-          {/* Right side - Theme Switcher & Profile */}
+          {/* Right side - Country Switcher & Profile */}
           <div className="flex items-center gap-2">
-            <ThemeSwitcher />
+            <CountrySwitcher />
             <Link to="/profile">
               <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg hover:scale-105 hover:shadow-purple-500/30 transition-all duration-200">
                 <User className="w-5 h-5 text-white" />
