@@ -8,52 +8,26 @@ export const themes = {
     name: 'dark',
     label: 'Errët',
     colors: {
-      bg: 'from-slate-950 via-purple-950/20 to-slate-950',
-      card: 'bg-slate-800/50',
-      cardBorder: 'border-slate-700/50',
-      text: 'text-white',
-      textMuted: 'text-slate-400',
-      input: 'bg-slate-800 border-slate-700',
-      inputFocus: 'focus:border-purple-500'
+      bg: '#0f172a',
+      bgSecondary: '#1e293b',
+      card: '#1e293b',
+      cardBorder: '#334155',
+      text: '#f8fafc',
+      textSecondary: '#94a3b8',
+      accent: '#a855f7'
     }
   },
   light: {
     name: 'light',
     label: 'Dritë',
     colors: {
-      bg: 'from-slate-100 via-purple-100/30 to-slate-100',
-      card: 'bg-white/80',
-      cardBorder: 'border-slate-200',
-      text: 'text-slate-900',
-      textMuted: 'text-slate-600',
-      input: 'bg-white border-slate-300',
-      inputFocus: 'focus:border-purple-500'
-    }
-  },
-  midnight: {
-    name: 'midnight',
-    label: 'Mesnatë',
-    colors: {
-      bg: 'from-slate-950 via-blue-950/30 to-slate-950',
-      card: 'bg-slate-900/70',
-      cardBorder: 'border-blue-900/50',
-      text: 'text-blue-50',
-      textMuted: 'text-blue-300',
-      input: 'bg-slate-900 border-blue-800',
-      inputFocus: 'focus:border-blue-400'
-    }
-  },
-  sunset: {
-    name: 'sunset',
-    label: 'Perëndim',
-    colors: {
-      bg: 'from-orange-950 via-rose-950/30 to-slate-950',
-      card: 'bg-slate-900/70',
-      cardBorder: 'border-orange-900/50',
-      text: 'text-orange-50',
-      textMuted: 'text-orange-200',
-      input: 'bg-slate-900 border-orange-800',
-      inputFocus: 'focus:border-orange-400'
+      bg: '#f1f5f9',
+      bgSecondary: '#ffffff',
+      card: '#ffffff',
+      cardBorder: '#e2e8f0',
+      text: '#0f172a',
+      textSecondary: '#475569',
+      accent: '#7c3aed'
     }
   }
 };
@@ -67,37 +41,26 @@ export function ThemeProvider({ children }) {
   useEffect(() => {
     localStorage.setItem('theme', theme);
     
-    // Apply theme class to document
-    document.documentElement.classList.remove('theme-dark', 'theme-light', 'theme-midnight', 'theme-sunset');
+    // Remove old theme classes and add new one
+    document.documentElement.classList.remove('theme-dark', 'theme-light');
     document.documentElement.classList.add(`theme-${theme}`);
     
-    // Set CSS variables for the theme
+    // Set CSS variables
     const root = document.documentElement;
-    if (theme === 'light') {
-      root.style.setProperty('--bg-primary', '#f8fafc');
-      root.style.setProperty('--bg-secondary', '#ffffff');
-      root.style.setProperty('--text-primary', '#0f172a');
-      root.style.setProperty('--text-secondary', '#475569');
-      root.style.setProperty('--border-color', '#e2e8f0');
-    } else if (theme === 'midnight') {
-      root.style.setProperty('--bg-primary', '#020617');
-      root.style.setProperty('--bg-secondary', '#0f172a');
-      root.style.setProperty('--text-primary', '#e0f2fe');
-      root.style.setProperty('--text-secondary', '#7dd3fc');
-      root.style.setProperty('--border-color', '#1e3a5f');
-    } else if (theme === 'sunset') {
-      root.style.setProperty('--bg-primary', '#1c1917');
-      root.style.setProperty('--bg-secondary', '#292524');
-      root.style.setProperty('--text-primary', '#fff7ed');
-      root.style.setProperty('--text-secondary', '#fed7aa');
-      root.style.setProperty('--border-color', '#7c2d12');
-    } else {
-      // Dark theme (default)
-      root.style.setProperty('--bg-primary', '#020617');
-      root.style.setProperty('--bg-secondary', '#1e293b');
-      root.style.setProperty('--text-primary', '#f8fafc');
-      root.style.setProperty('--text-secondary', '#94a3b8');
-      root.style.setProperty('--border-color', '#334155');
+    const themeColors = themes[theme].colors;
+    
+    root.style.setProperty('--bg-primary', themeColors.bg);
+    root.style.setProperty('--bg-secondary', themeColors.bgSecondary);
+    root.style.setProperty('--card-bg', themeColors.card);
+    root.style.setProperty('--card-border', themeColors.cardBorder);
+    root.style.setProperty('--text-primary', themeColors.text);
+    root.style.setProperty('--text-secondary', themeColors.textSecondary);
+    root.style.setProperty('--accent-primary', themeColors.accent);
+    
+    // Update meta theme color
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', themeColors.bg);
     }
   }, [theme]);
 
@@ -109,10 +72,7 @@ export function ThemeProvider({ children }) {
   };
 
   const toggleTheme = () => {
-    const themeKeys = Object.keys(themes);
-    const currentIndex = themeKeys.indexOf(theme);
-    const nextIndex = (currentIndex + 1) % themeKeys.length;
-    changeTheme(themeKeys[nextIndex]);
+    changeTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
   return (
@@ -122,7 +82,7 @@ export function ThemeProvider({ children }) {
       themes,
       changeTheme, 
       toggleTheme,
-      isDark: theme !== 'light'
+      isDark: theme === 'dark'
     }}>
       {children}
     </ThemeContext.Provider>
@@ -136,4 +96,3 @@ export function useTheme() {
   }
   return context;
 }
-

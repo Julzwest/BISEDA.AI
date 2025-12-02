@@ -1,149 +1,126 @@
 import React, { useState } from 'react';
-import { Sun, Moon, Palette, Check, X, Sparkles } from 'lucide-react';
-import { useTheme, themes } from '@/contexts/ThemeContext';
+import { Sun, Moon, X } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
 
-export default function ThemeSwitcher({ variant = 'icon' }) {
-  const { theme, changeTheme, toggleTheme, isDark } = useTheme();
+export default function ThemeSwitcher() {
+  const { theme, changeTheme, isDark } = useTheme();
   const [showModal, setShowModal] = useState(false);
 
-  const themeIcons = {
-    dark: Moon,
-    light: Sun,
-    midnight: Sparkles,
-    sunset: Palette
-  };
-
-  const themeColors = {
-    dark: 'from-slate-600 to-purple-600',
-    light: 'from-amber-400 to-orange-400',
-    midnight: 'from-blue-600 to-indigo-600',
-    sunset: 'from-orange-500 to-rose-500'
-  };
-
-  const ThemeIcon = themeIcons[theme] || Moon;
-
-  if (variant === 'quick') {
-    return (
-      <button
-        onClick={toggleTheme}
-        className="p-2 rounded-xl bg-slate-700/50 hover:bg-slate-600/50 text-slate-400 hover:text-white transition-all"
-        title={`Tema: ${themes[theme]?.label}`}
-      >
-        <ThemeIcon className="w-5 h-5" />
-      </button>
-    );
-  }
+  const ThemeIcon = isDark ? Moon : Sun;
 
   return (
     <>
+      {/* Trigger Button */}
       <button
         onClick={() => setShowModal(true)}
-        className="p-2 rounded-xl bg-slate-700/50 hover:bg-slate-600/50 text-slate-400 hover:text-white transition-all group"
+        className="p-2.5 rounded-xl bg-slate-800/90 border border-slate-700/60 hover:bg-slate-700/90 hover:border-purple-500/50 text-slate-400 hover:text-white transition-all group"
         title="Ndrysho temën"
       >
-        <div className="relative">
-          <ThemeIcon className="w-5 h-5 group-hover:scale-110 transition-transform" />
-        </div>
+        <ThemeIcon className="w-5 h-5 group-hover:scale-110 transition-transform" />
       </button>
 
-      {/* Theme Selection Modal */}
+      {/* Modal */}
       {showModal && (
-        <div 
-          className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn"
-          onClick={() => setShowModal(false)}
-        >
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+          {/* Backdrop */}
           <div 
-            className="w-full max-w-sm bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-slate-700/50 rounded-3xl p-6 animate-scaleIn"
+            className="absolute inset-0 bg-black/60 backdrop-blur-md"
+            onClick={() => setShowModal(false)}
+          />
+          
+          {/* Modal Content */}
+          <div 
+            className="relative w-full max-w-xs bg-slate-900 border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <Palette className="w-5 h-5 text-purple-400" />
-                Zgjidh Temën
-              </h3>
+            <div className="flex items-center justify-between p-4 border-b border-slate-700/50">
+              <h3 className="text-base font-bold text-white">Zgjidh Temën</h3>
               <button
                 onClick={() => setShowModal(false)}
-                className="p-2 rounded-full bg-slate-700/50 hover:bg-slate-600/50 text-slate-400 hover:text-white transition-all"
+                className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center transition-colors"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4 text-slate-400" />
               </button>
             </div>
 
             {/* Theme Options */}
-            <div className="grid grid-cols-2 gap-3">
-              {Object.entries(themes).map(([key, themeConfig]) => {
-                const Icon = themeIcons[key];
-                const isSelected = theme === key;
-                
-                return (
-                  <button
-                    key={key}
-                    onClick={() => {
-                      changeTheme(key);
-                      setShowModal(false);
-                    }}
-                    className={`relative p-4 rounded-2xl border-2 transition-all ${
-                      isSelected 
-                        ? 'border-purple-500 bg-purple-500/10' 
-                        : 'border-slate-700 hover:border-slate-600 bg-slate-800/50 hover:bg-slate-700/50'
-                    }`}
-                  >
-                    {/* Selection indicator */}
-                    {isSelected && (
-                      <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center">
-                        <Check className="w-3 h-3 text-white" />
-                      </div>
-                    )}
+            <div className="p-4 space-y-3">
+              {/* Dark Theme */}
+              <button
+                onClick={() => {
+                  changeTheme('dark');
+                  setShowModal(false);
+                }}
+                className={`w-full p-4 rounded-xl border-2 transition-all flex items-center gap-4 ${
+                  theme === 'dark' 
+                    ? 'border-purple-500 bg-purple-500/10' 
+                    : 'border-slate-700 hover:border-slate-600 bg-slate-800/50'
+                }`}
+              >
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center border border-slate-600">
+                  <Moon className="w-6 h-6 text-purple-400" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-semibold text-white">Errët</p>
+                  <p className="text-xs text-slate-400">Më e lehtë për sytë natën</p>
+                </div>
+                {theme === 'dark' && (
+                  <div className="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                )}
+              </button>
 
-                    {/* Theme preview */}
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${themeColors[key]} flex items-center justify-center mx-auto mb-3 ${isSelected ? 'scale-110' : ''} transition-transform`}>
-                      <Icon className="w-6 h-6 text-white" />
-                    </div>
-
-                    <p className={`text-sm font-semibold text-center ${isSelected ? 'text-white' : 'text-slate-400'}`}>
-                      {themeConfig.label}
-                    </p>
-
-                    {/* Mini color preview */}
-                    <div className="flex justify-center gap-1 mt-2">
-                      <div className={`w-3 h-3 rounded-full ${key === 'light' ? 'bg-slate-200' : 'bg-slate-700'}`} />
-                      <div className={`w-3 h-3 rounded-full ${
-                        key === 'light' ? 'bg-purple-400' : 
-                        key === 'midnight' ? 'bg-blue-500' :
-                        key === 'sunset' ? 'bg-orange-500' : 'bg-purple-500'
-                      }`} />
-                      <div className={`w-3 h-3 rounded-full ${key === 'light' ? 'bg-slate-900' : 'bg-slate-300'}`} />
-                    </div>
-                  </button>
-                );
-              })}
+              {/* Light Theme */}
+              <button
+                onClick={() => {
+                  changeTheme('light');
+                  setShowModal(false);
+                }}
+                className={`w-full p-4 rounded-xl border-2 transition-all flex items-center gap-4 ${
+                  theme === 'light' 
+                    ? 'border-purple-500 bg-purple-500/10' 
+                    : 'border-slate-700 hover:border-slate-600 bg-slate-800/50'
+                }`}
+              >
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-100 to-orange-200 flex items-center justify-center border border-amber-300">
+                  <Sun className="w-6 h-6 text-amber-600" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-semibold text-white">Dritë</p>
+                  <p className="text-xs text-slate-400">Më e qartë ditën</p>
+                </div>
+                {theme === 'light' && (
+                  <div className="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                )}
+              </button>
             </div>
 
-            {/* Current theme indicator */}
-            <div className="mt-4 p-3 bg-slate-800/50 rounded-xl border border-slate-700/50 text-center">
-              <span className="text-sm text-slate-500">
-                Tema aktuale: <span className="text-purple-400 font-semibold">{themes[theme]?.label}</span>
-              </span>
+            {/* Preview */}
+            <div className="px-4 pb-4">
+              <div className={`p-3 rounded-xl border ${
+                theme === 'light' 
+                  ? 'bg-white border-slate-200' 
+                  : 'bg-slate-800 border-slate-700'
+              }`}>
+                <p className={`text-xs font-medium ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
+                  Pamje paraprake
+                </p>
+                <p className={`text-[10px] mt-1 ${theme === 'light' ? 'text-slate-500' : 'text-slate-500'}`}>
+                  Kështu do duket aplikacioni
+                </p>
+              </div>
             </div>
           </div>
-
-          {/* Animations */}
-          <style>{`
-            @keyframes fadeIn {
-              from { opacity: 0; }
-              to { opacity: 1; }
-            }
-            @keyframes scaleIn {
-              from { opacity: 0; transform: scale(0.95); }
-              to { opacity: 1; transform: scale(1); }
-            }
-            .animate-fadeIn { animation: fadeIn 0.2s ease-out; }
-            .animate-scaleIn { animation: scaleIn 0.3s ease-out; }
-          `}</style>
         </div>
       )}
     </>
   );
 }
-

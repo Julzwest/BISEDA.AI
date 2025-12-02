@@ -305,44 +305,32 @@ input[type="password"] {
   box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
 }
 
-/* Theme CSS Variables */
-:root {
-  --bg-primary: #020617;
+/* Theme CSS Variables - Dark Mode (Default) */
+:root, .theme-dark {
+  --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
+  --bg-card: #1e293b;
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
+  --text-muted: #64748b;
   --border-color: #334155;
   --accent-primary: #a855f7;
   --accent-secondary: #ec4899;
+  --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
 }
 
-/* Apply theme variables */
+/* Light Theme - Clean, High Contrast Design */
 .theme-light {
-  --bg-primary: #f8fafc;
+  --bg-primary: #f1f5f9;
   --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
   --text-primary: #0f172a;
   --text-secondary: #475569;
-  --border-color: #e2e8f0;
-}
-
-.theme-midnight {
-  --bg-primary: #020617;
-  --bg-secondary: #0f172a;
-  --text-primary: #e0f2fe;
-  --text-secondary: #7dd3fc;
-  --border-color: #1e3a5f;
-  --accent-primary: #3b82f6;
-  --accent-secondary: #6366f1;
-}
-
-.theme-sunset {
-  --bg-primary: #1c1917;
-  --bg-secondary: #292524;
-  --text-primary: #fff7ed;
-  --text-secondary: #fed7aa;
-  --border-color: #7c2d12;
-  --accent-primary: #f97316;
-  --accent-secondary: #f43f5e;
+  --text-muted: #64748b;
+  --border-color: #cbd5e1;
+  --accent-primary: #7c3aed;
+  --accent-secondary: #db2777;
+  --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 /* Apply theme to body and root elements */
@@ -352,67 +340,156 @@ html, body, #root {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Theme-aware cards and containers */
-.theme-card {
-  background-color: var(--bg-secondary);
-  border-color: var(--border-color);
-  color: var(--text-primary);
-}
+/* ============================================
+   LIGHT THEME COMPREHENSIVE OVERRIDES
+   ============================================ */
 
-.theme-text {
-  color: var(--text-primary);
-}
-
-.theme-text-muted {
-  color: var(--text-secondary);
-}
-
-.theme-border {
-  border-color: var(--border-color);
-}
-
-/* Light theme specific overrides */
+/* Background overrides */
 .theme-light body,
 .theme-light #root {
-  background-color: #f8fafc !important;
+  background-color: #f1f5f9 !important;
 }
 
 .theme-light .bg-slate-950,
 .theme-light .bg-slate-900,
 .theme-light .from-slate-950,
-.theme-light .via-slate-900 {
-  background-color: #f8fafc !important;
+.theme-light .via-slate-900,
+.theme-light .to-slate-950,
+.theme-light .via-purple-950\/20,
+.theme-light .bg-gradient-to-b {
+  background: #f1f5f9 !important;
 }
 
+/* Text color overrides for light mode */
 .theme-light .text-white {
   color: #0f172a !important;
 }
 
-.theme-light .text-slate-300,
-.theme-light .text-slate-400 {
-  color: #475569 !important;
+.theme-light .text-slate-100,
+.theme-light .text-slate-200,
+.theme-light .text-slate-300 {
+  color: #334155 !important;
 }
 
+.theme-light .text-slate-400,
+.theme-light .text-slate-500 {
+  color: #64748b !important;
+}
+
+/* Card and container backgrounds */
 .theme-light .bg-slate-800,
 .theme-light .bg-slate-800\/50,
-.theme-light .bg-slate-800\/80 {
-  background-color: rgba(255, 255, 255, 0.9) !important;
-  border-color: #e2e8f0 !important;
+.theme-light .bg-slate-800\/80,
+.theme-light .bg-slate-800\/90,
+.theme-light .from-slate-800,
+.theme-light .from-slate-800\/80,
+.theme-light .to-slate-900,
+.theme-light .to-slate-900\/80 {
+  background: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
 }
 
+.theme-light .bg-slate-900,
+.theme-light .bg-slate-900\/50,
+.theme-light .bg-slate-900\/80,
+.theme-light .bg-slate-900\/95 {
+  background: #ffffff !important;
+}
+
+/* Border overrides */
 .theme-light .border-slate-700,
-.theme-light .border-slate-700\/50 {
+.theme-light .border-slate-700\/50,
+.theme-light .border-slate-700\/60,
+.theme-light .border-slate-600 {
   border-color: #e2e8f0 !important;
 }
 
-/* Midnight theme specific overrides */
-.theme-midnight .text-purple-400,
-.theme-midnight .text-purple-300 {
-  color: #60a5fa !important;
+.theme-light .border-purple-500\/50 {
+  border-color: #a78bfa !important;
 }
 
-/* Sunset theme specific overrides */
-.theme-sunset .text-purple-400,
-.theme-sunset .text-purple-300 {
-  color: #fb923c !important;
+/* Gradient text - keep colorful */
+.theme-light .bg-gradient-to-r.from-white,
+.theme-light .bg-clip-text.text-transparent {
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+}
+
+/* Header and navigation in light mode */
+.theme-light header,
+.theme-light nav {
+  background: linear-gradient(to bottom, rgba(241, 245, 249, 0.98), rgba(241, 245, 249, 0.95)) !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Cards with gradient backgrounds - make them white with subtle shadow */
+.theme-light .bg-gradient-to-br.from-slate-800\/80,
+.theme-light .bg-gradient-to-br.from-slate-800\/50 {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+/* Input fields */
+.theme-light input,
+.theme-light textarea,
+.theme-light select {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.theme-light input::placeholder,
+.theme-light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Buttons in light mode */
+.theme-light .bg-slate-700,
+.theme-light .bg-slate-700\/50 {
+  background-color: #e2e8f0 !important;
+  color: #334155 !important;
+}
+
+.theme-light .hover\:bg-slate-600:hover,
+.theme-light .hover\:bg-slate-700:hover {
+  background-color: #cbd5e1 !important;
+}
+
+/* Purple accent colors stay vibrant */
+.theme-light .text-purple-400,
+.theme-light .text-purple-300 {
+  color: #7c3aed !important;
+}
+
+.theme-light .text-pink-400,
+.theme-light .text-pink-300 {
+  color: #db2777 !important;
+}
+
+/* Feature cards with colored gradients - keep the gradients */
+.theme-light .from-purple-500,
+.theme-light .from-pink-500,
+.theme-light .from-blue-500,
+.theme-light .from-amber-500,
+.theme-light .from-yellow-500,
+.theme-light .from-rose-500 {
+  /* Keep original gradient colors */
+}
+
+/* Bottom navigation active state */
+.theme-light .nav-item.active {
+  color: #7c3aed !important;
+}
+
+/* Scrollbar for light mode */
+.theme-light ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.theme-light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+
+.theme-light ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
