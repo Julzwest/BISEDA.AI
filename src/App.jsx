@@ -8,6 +8,7 @@ import FirstDates from './pages/FirstDates.jsx';
 import Chat from './pages/Chat.jsx';
 import GiftSuggestions from './pages/GiftSuggestions.jsx';
 import FestiveDates from './pages/FestiveDates.jsx';
+import Events from './pages/Events.jsx';
 import SubscriptionSuccess from './pages/SubscriptionSuccess.jsx';
 import SubscriptionCancel from './pages/SubscriptionCancel.jsx';
 import Admin from './pages/Admin.jsx';
@@ -71,6 +72,7 @@ function App() {
           <Route path="/clipboard" element={<ClipboardSuggestions />} />
           <Route path="/firstdates" element={<FirstDates />} />
           <Route path="/festivedates" element={<FestiveDates />} />
+          <Route path="/events" element={<Events />} />
           <Route path="/gifts" element={<GiftSuggestions />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/subscription/success" element={<SubscriptionSuccess />} />

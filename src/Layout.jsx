@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from './utils';
-import { Lightbulb, Home, Calendar, Bot, Flag, User } from 'lucide-react';
+import { Lightbulb, Home, Calendar, Bot, Flag, User, PartyPopper } from 'lucide-react';
 
 export default function Layout({ children, onLogout }) {
   const location = useLocation();
@@ -11,7 +11,7 @@ export default function Layout({ children, onLogout }) {
     { name: 'Home', icon: Home, page: 'Home' },
     { name: 'AI Coach', icon: Bot, page: 'Chat' },
     { name: 'Takime', icon: Calendar, page: 'FirstDates' },
-    { name: 'Festive', icon: Flag, page: 'FestiveDates' },
+    { name: 'Evente', icon: PartyPopper, page: 'Events' },
     { name: 'Këshilla', icon: Lightbulb, page: 'Tips' }
   ];
 

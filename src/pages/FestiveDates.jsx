@@ -1,22 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, Sparkles, Flag, Heart, Star, Gift, Cake, Globe, MapPin, Music, PartyPopper, Store, ExternalLink } from 'lucide-react';
+import React, { useState } from 'react';
+import { Calendar, Sparkles, Flag, Heart, Star, Gift, Globe } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { countries, getCitiesForCountry, getCountryByCode, getCityNameEn } from '@/config/countries';
-import { getBackendUrl } from '@/utils/getBackendUrl';
+import { getCountryByCode } from '@/config/countries';
 
 export default function FestiveDates() {
-  const backendUrl = getBackendUrl();
-  
   // Get user's country from localStorage
   const userCountry = localStorage.getItem('userCountry') || 'AL';
   const currentCountry = getCountryByCode(userCountry);
-  const cities = getCitiesForCountry(userCountry).map(c => c.name);
   
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-  const [selectedCity, setSelectedCity] = useState('');
-  const [localEvents, setLocalEvents] = useState([]);
-  const [isLoadingEvents, setIsLoadingEvents] = useState(false);
 
   const months = [
     'Janar', 'Shkurt', 'Mars', 'Prill', 'Maj', 'Qershor',
@@ -275,65 +267,6 @@ export default function FestiveDates() {
     return colors[type] || 'from-slate-500/20 to-slate-600/20 border-slate-500/50';
   };
 
-  // Search for local events
-  const searchLocalEvents = async () => {
-    if (!selectedCity) return;
-    
-    setIsLoadingEvents(true);
-    setLocalEvents([]);
-
-    try {
-      const cityNameEn = getCityNameEn(userCountry, selectedCity);
-      const countryNameEn = currentCountry?.nameEn || 'Albania';
-      
-      console.log('🎉 Searching for events in', cityNameEn, countryNameEn);
-      
-      const response = await fetch(`${backendUrl}/api/places/search`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: 'events venues concert halls theaters nightclubs live music entertainment',
-          location: `${cityNameEn}, ${countryNameEn}`,
-          category: 'events'
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        
-        if (data.source === 'google-places' && data.places && data.places.length > 0) {
-          console.log('✅ Found', data.places.length, 'event venues');
-          
-          const formattedEvents = data.places.map((place, index) => ({
-            id: index + 1,
-            name: place.name,
-            description: place.description,
-            location: place.location,
-            rating: place.rating,
-            googleMapsLink: place.googleMapsLink,
-            isOpen: place.isOpen,
-            type: 'venue'
-          }));
-          
-          setLocalEvents(formattedEvents);
-        }
-      }
-    } catch (error) {
-      console.error('❌ Error searching events:', error);
-    } finally {
-      setIsLoadingEvents(false);
-    }
-  };
-
-  // Search when city changes
-  useEffect(() => {
-    if (selectedCity) {
-      searchLocalEvents();
-    }
-  }, [selectedCity]);
-
   return (
     <div className="px-6 pt-20 pb-32 bg-gradient-to-b from-slate-950 via-purple-950/20 to-slate-950">
       {/* Header */}
@@ -351,7 +284,7 @@ export default function FestiveDates() {
         <h1 className="text-3xl font-extrabold bg-gradient-to-r from-red-300 via-orange-300 to-yellow-300 bg-clip-text text-transparent mb-2">
           Datat Festive {currentCountry?.flag}
         </h1>
-        <p className="text-slate-400 text-sm">Gjej datat e rëndësishme dhe evente lokale</p>
+        <p className="text-slate-400 text-sm">Gjej datat e rëndësishme për takime speciale</p>
       </div>
 
       {/* Current Country Display */}
@@ -449,114 +382,6 @@ export default function FestiveDates() {
         )}
       </div>
 
-      {/* City Selection for Local Events */}
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-3">
-          <PartyPopper className="w-5 h-5 text-yellow-400" />
-          <h2 className="text-lg font-bold text-white">Evente Lokale</h2>
-        </div>
-        <p className="text-slate-400 text-sm mb-3">Zgjidh qytetin për të gjetur vende eventesh dhe argëtimi</p>
-        <div className="flex flex-wrap gap-2">
-          {cities.map((city) => (
-            <button
-              key={city}
-              onClick={() => setSelectedCity(selectedCity === city ? '' : city)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                selectedCity === city
-                  ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-lg shadow-yellow-500/30 scale-105'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
-              }`}
-            >
-              {city}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Loading Local Events */}
-      {isLoadingEvents && selectedCity && (
-        <div className="text-center py-6 mb-6">
-          <div className="inline-block w-6 h-6 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-slate-400 mt-3 text-sm">Duke kërkuar vende eventesh në {selectedCity}...</p>
-        </div>
-      )}
-
-      {/* Local Events/Venues Section */}
-      {selectedCity && localEvents.length > 0 && (
-        <div className="mb-8">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent"></div>
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <Music className="w-5 h-5 text-yellow-400" />
-              Vende Eventesh në {selectedCity}
-            </h2>
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent"></div>
-          </div>
-
-          <div className="space-y-3">
-            {localEvents.map((venue) => (
-              <Card
-                key={venue.id}
-                className="bg-gradient-to-br from-yellow-500/20 via-orange-500/20 to-red-500/20 border-2 border-yellow-500/30 backdrop-blur-sm hover:scale-[1.02] transition-all"
-              >
-                <div className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shrink-0">
-                      <Music className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <h3 className="text-white font-bold">{venue.name}</h3>
-                        {venue.rating && (
-                          <div className="flex items-center gap-1">
-                            <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                            <span className="text-xs text-slate-300">{venue.rating}</span>
-                          </div>
-                        )}
-                        {venue.isOpen !== undefined && (
-                          <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                            venue.isOpen 
-                              ? 'bg-green-500/20 text-green-300 border border-green-500/50'
-                              : 'bg-red-500/20 text-red-300 border border-red-500/50'
-                          }`}>
-                            {venue.isOpen ? 'Hapur' : 'Mbyllur'}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-slate-300 text-sm mb-2">{venue.description}</p>
-                      {venue.location && (
-                        <p className="text-slate-400 text-xs mb-2">📍 {venue.location}</p>
-                      )}
-                      {venue.googleMapsLink && (
-                        <a
-                          href={venue.googleMapsLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/50 rounded-lg text-xs font-semibold text-yellow-300 transition-all"
-                        >
-                          <MapPin className="w-3 h-3" />
-                          Shiko në Google Maps
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Empty state for events */}
-      {selectedCity && !isLoadingEvents && localEvents.length === 0 && (
-        <div className="text-center py-8 mb-6">
-          <div className="text-4xl mb-3">🎭</div>
-          <p className="text-slate-400">Nuk u gjetën vende eventesh në {selectedCity}</p>
-          <p className="text-slate-500 text-sm mt-1">Provo një qytet tjetër</p>
-        </div>
-      )}
-
       {/* Info Card */}
       <Card className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-2 border-purple-500/30 backdrop-blur-sm">
         <div className="p-5">
@@ -567,7 +392,7 @@ export default function FestiveDates() {
           <ul className="space-y-2 text-slate-300 text-sm">
             <li>• Datat kombëtare janë perfekte për takime me temë patriotike</li>
             <li>• Festimet kulturore ofrojnë mundësi për eksperienca unike</li>
-            <li>• Kontrollo eventet lokale për aktivitete speciale</li>
+            <li>• Dita e Dashurisë është perfekte për takime romantike</li>
             <li>• Planifikoni paraprakisht për restorante dhe aktivitete</li>
           </ul>
         </div>

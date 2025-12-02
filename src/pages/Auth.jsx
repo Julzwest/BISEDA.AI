@@ -346,35 +346,6 @@ export default function Auth({ onAuthSuccess }) {
               </div>
             )}
 
-            {/* Country Selection (only for signup - REQUIRED) */}
-            {!isLogin && (
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Ku jeton? <span className="text-pink-400">*</span>
-                </label>
-                <div className="relative">
-                  <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                  <select
-                    name="country"
-                    value={formData.country}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-purple-500 appearance-none cursor-pointer"
-                    style={{ fontSize: '16px' }}
-                  >
-                    {countries.map((country) => (
-                      <option key={country.code} value={country.code}>
-                        {country.flag} {country.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <p className="text-xs text-slate-500 mt-1">
-                  Kjo ndikon rezultatet në Takime dhe Dhurata
-                </p>
-              </div>
-            )}
-
             {/* Password */}
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
