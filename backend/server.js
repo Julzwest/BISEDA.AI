@@ -6,6 +6,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import nodemailer from 'nodemailer';
 import { getUser, saveUser } from './models/User.js';
 import stripeRoutes from './routes/stripe.js';
 import businessRoutes from './routes/businesses.js';
@@ -601,13 +602,47 @@ app.post('/api/transcribe', rateLimit, async (req, res) => {
 // USER AUTHENTICATION ENDPOINTS
 // ==========================================
 
-// In-memory user accounts storage (for MVP - move to database later)
+// User accounts storage with file persistence
 const userAccounts = new Map();
+const USER_DATA_FILE = join(__dirname, 'data', 'users.json');
+
+// Ensure data directory exists
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+const dataDir = join(__dirname, 'data');
+if (!existsSync(dataDir)) {
+  mkdirSync(dataDir, { recursive: true });
+}
+
+// Load users from file on startup
+function loadUsersFromFile() {
+  try {
+    if (existsSync(USER_DATA_FILE)) {
+      const data = JSON.parse(readFileSync(USER_DATA_FILE, 'utf8'));
+      data.forEach(user => userAccounts.set(user.userId, user));
+      console.log(`📂 Loaded ${userAccounts.size} users from file`);
+    }
+  } catch (error) {
+    console.error('Error loading users:', error.message);
+  }
+}
+
+// Save users to file
+function saveUsersToFile() {
+  try {
+    const users = Array.from(userAccounts.values());
+    writeFileSync(USER_DATA_FILE, JSON.stringify(users, null, 2));
+  } catch (error) {
+    console.error('Error saving users:', error.message);
+  }
+}
+
+// Load users on startup
+loadUsersFromFile();
 
 // User registration endpoint
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { username, email, phoneNumber, password, appleId } = req.body;
+    const { username, email, phoneNumber, password, appleId, country } = req.body;
     
     // Validate required fields (if not using Apple Sign In)
     if (!appleId && (!username || !email || !password)) {
@@ -638,10 +673,14 @@ app.post('/api/auth/register', async (req, res) => {
       appleId: appleId || null,
       createdAt: new Date().toISOString(),
       lastLogin: new Date().toISOString(),
-      isVerified: appleId ? true : false // Apple users are auto-verified
+      isVerified: appleId ? true : false, // Apple users are auto-verified
+      country: country || 'AL'
     };
     
     userAccounts.set(userId, userAccount);
+    
+    // Save to file for persistence
+    saveUsersToFile();
     
     // Also create user subscription profile
     const user = getUser(userId);
@@ -656,7 +695,8 @@ app.post('/api/auth/register', async (req, res) => {
         username: userAccount.username,
         email: userAccount.email,
         phoneNumber: userAccount.phoneNumber,
-        createdAt: userAccount.createdAt
+        createdAt: userAccount.createdAt,
+        country: userAccount.country
       },
       message: 'Registration successful'
     });
@@ -673,28 +713,29 @@ app.post('/api/auth/register', async (req, res) => {
 // User login endpoint
 app.post('/api/auth/login', async (req, res) => {
   try {
-    const { email, password, appleId } = req.body;
+    const { email, password, appleId, identifier } = req.body;
+    const loginIdentifier = (identifier || email || '').trim();
     
     // Find user by email, username, or Apple ID
     let userAccount;
     if (appleId) {
       userAccount = Array.from(userAccounts.values()).find(u => u.appleId === appleId);
     } else {
-      if (!email || !password) {
+      if (!loginIdentifier || !password) {
         return res.status(400).json({ 
           error: 'Email/username and password are required' 
         });
       }
       
       // Check if input is email or username
-      const isEmail = email.includes('@');
+      const isEmail = loginIdentifier.includes('@');
       
       if (isEmail) {
-        userAccount = Array.from(userAccounts.values()).find(u => u.email === email);
+        userAccount = Array.from(userAccounts.values()).find(u => u.email === loginIdentifier);
       } else {
         // Search by username (case insensitive)
         userAccount = Array.from(userAccounts.values()).find(
-          u => u.username && u.username.toLowerCase() === email.toLowerCase()
+          u => u.username && u.username.toLowerCase() === loginIdentifier.toLowerCase()
         );
       }
       
@@ -725,7 +766,8 @@ app.post('/api/auth/login', async (req, res) => {
         username: userAccount.username,
         email: userAccount.email,
         phoneNumber: userAccount.phoneNumber,
-        createdAt: userAccount.createdAt
+        createdAt: userAccount.createdAt,
+        country: userAccount.country
       },
       message: 'Login successful'
     });
@@ -736,6 +778,235 @@ app.post('/api/auth/login', async (req, res) => {
       error: 'Login failed',
       message: error.message 
     });
+  }
+});
+
+// Password reset codes storage (in-memory for MVP)
+const passwordResetCodes = new Map();
+
+// Email transporter setup
+// Supports Gmail, 123-reg, or any SMTP server
+// For 123-reg: Set EMAIL_HOST=smtp.123-reg.co.uk, EMAIL_PORT=587
+// For Gmail: Set EMAIL_HOST=smtp.gmail.com, EMAIL_PORT=587
+const createEmailTransporter = () => {
+  const emailUser = process.env.EMAIL_USER;
+  const emailPass = process.env.EMAIL_PASSWORD || process.env.EMAIL_APP_PASSWORD;
+  const emailHost = process.env.EMAIL_HOST || 'smtp.gmail.com';
+  const emailPort = parseInt(process.env.EMAIL_PORT) || 587;
+  
+  if (!emailUser || !emailPass) {
+    console.log('⚠️  Email not configured. Set EMAIL_USER and EMAIL_PASSWORD in .env');
+    return null;
+  }
+  
+  console.log(`📧 Email configured: ${emailUser} via ${emailHost}:${emailPort}`);
+  
+  return nodemailer.createTransport({
+    host: emailHost,
+    port: emailPort,
+    secure: emailPort === 465, // true for 465, false for other ports
+    auth: {
+      user: emailUser,
+      pass: emailPass
+    },
+    tls: {
+      rejectUnauthorized: false // Allow self-signed certs (some hosts need this)
+    }
+  });
+};
+
+// Send password reset email
+const sendResetEmail = async (toEmail, resetCode) => {
+  const transporter = createEmailTransporter();
+  
+  if (!transporter) {
+    console.log(`📧 EMAIL NOT CONFIGURED - Reset code for ${toEmail}: ${resetCode}`);
+    return false;
+  }
+  
+  const mailOptions = {
+    from: `"Biseda.ai" <${process.env.EMAIL_USER}>`,
+    to: toEmail,
+    subject: '🔐 Kodi për Rivendosjen e Fjalëkalimit - Biseda.ai',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #8B5CF6; margin: 0;">Biseda.ai</h1>
+          <p style="color: #64748B; margin-top: 5px;">AI Coach për Dating dhe Biseda</p>
+        </div>
+        
+        <div style="background: linear-gradient(135deg, #1E1B4B 0%, #312E81 100%); border-radius: 16px; padding: 30px; text-align: center;">
+          <h2 style="color: #FFFFFF; margin-top: 0;">Rivendos Fjalëkalimin</h2>
+          <p style="color: #CBD5E1;">Kodi juaj i rivendosjes është:</p>
+          
+          <div style="background: #0F172A; border-radius: 12px; padding: 20px; margin: 20px 0;">
+            <span style="font-size: 32px; font-weight: bold; color: #A78BFA; letter-spacing: 8px;">${resetCode}</span>
+          </div>
+          
+          <p style="color: #94A3B8; font-size: 14px;">
+            Ky kod skadon pas <strong>15 minutash</strong>.
+          </p>
+          <p style="color: #94A3B8; font-size: 14px;">
+            Nëse nuk e keni kërkuar këtë kod, injoroni këtë email.
+          </p>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px; color: #64748B; font-size: 12px;">
+          <p>© 2024 Biseda.ai - Të gjitha të drejtat e rezervuara</p>
+        </div>
+      </div>
+    `
+  };
+  
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Reset email sent to ${toEmail}`);
+    return true;
+  } catch (error) {
+    console.error('❌ Failed to send email:', error.message);
+    return false;
+  }
+};
+
+// Request password reset - sends code to email
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Email është i detyrueshëm' });
+    }
+    
+    // Find user by email
+    const userAccount = Array.from(userAccounts.values()).find(u => u.email === email);
+    
+    if (!userAccount) {
+      // Don't reveal if email exists or not for security
+      return res.json({ 
+        success: true, 
+        message: 'Nëse email ekziston, do të marrësh një kod rivendosjeje.' 
+      });
+    }
+    
+    // Generate 6-digit code
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes
+    
+    // Store the reset code
+    passwordResetCodes.set(email, {
+      code: resetCode,
+      expiresAt,
+      userId: userAccount.userId
+    });
+    
+    // Try to send email
+    const emailSent = await sendResetEmail(email, resetCode);
+    
+    // Log the code for debugging
+    console.log(`🔐 Password reset code for ${email}: ${resetCode}`);
+    
+    res.json({ 
+      success: true, 
+      message: emailSent 
+        ? 'Kodi i rivendosjes u dërgua në email.' 
+        : 'Kodi i rivendosjes u dërgua në email.',
+      // Show code in dev mode if email not configured
+      _devCode: (!emailSent || process.env.NODE_ENV !== 'production') ? resetCode : undefined
+    });
+    
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ error: 'Gabim në server. Provoni përsëri.' });
+  }
+});
+
+// Verify reset code
+app.post('/api/auth/verify-reset-code', async (req, res) => {
+  try {
+    const { email, code } = req.body;
+    
+    if (!email || !code) {
+      return res.status(400).json({ error: 'Email dhe kodi janë të detyrueshëm' });
+    }
+    
+    const resetData = passwordResetCodes.get(email);
+    
+    if (!resetData) {
+      return res.status(400).json({ error: 'Kodi nuk u gjet ose ka skaduar' });
+    }
+    
+    if (Date.now() > resetData.expiresAt) {
+      passwordResetCodes.delete(email);
+      return res.status(400).json({ error: 'Kodi ka skaduar. Kërkoni një kod të ri.' });
+    }
+    
+    if (resetData.code !== code) {
+      return res.status(400).json({ error: 'Kodi i gabuar' });
+    }
+    
+    res.json({ success: true, message: 'Kodi u verifikua me sukses' });
+    
+  } catch (error) {
+    console.error('Verify reset code error:', error);
+    res.status(500).json({ error: 'Gabim në server' });
+  }
+});
+
+// Reset password with code
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { email, code, newPassword } = req.body;
+    
+    if (!email || !code || !newPassword) {
+      return res.status(400).json({ error: 'Të gjitha fushat janë të detyrueshme' });
+    }
+    
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'Fjalëkalimi duhet të ketë së paku 6 karaktere' });
+    }
+    
+    const resetData = passwordResetCodes.get(email);
+    
+    if (!resetData) {
+      return res.status(400).json({ error: 'Kodi nuk u gjet ose ka skaduar' });
+    }
+    
+    if (Date.now() > resetData.expiresAt) {
+      passwordResetCodes.delete(email);
+      return res.status(400).json({ error: 'Kodi ka skaduar. Kërkoni një kod të ri.' });
+    }
+    
+    if (resetData.code !== code) {
+      return res.status(400).json({ error: 'Kodi i gabuar' });
+    }
+    
+    // Find and update user password
+    const userAccount = Array.from(userAccounts.values()).find(u => u.email === email);
+    
+    if (!userAccount) {
+      return res.status(404).json({ error: 'Përdoruesi nuk u gjet' });
+    }
+    
+    // Update password (in production, hash this!)
+    userAccount.password = newPassword;
+    userAccounts.set(userAccount.userId, userAccount);
+    
+    // Save to file for persistence
+    saveUsersToFile();
+    
+    // Remove used reset code
+    passwordResetCodes.delete(email);
+    
+    console.log(`✅ Password reset successful for ${email}`);
+    
+    res.json({ 
+      success: true, 
+      message: 'Fjalëkalimi u ndryshua me sukses! Tani mund të kyçeni.' 
+    });
+    
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: 'Gabim në server' });
   }
 });
 
