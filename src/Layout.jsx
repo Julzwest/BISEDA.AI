@@ -1,10 +1,13 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from './utils';
 import { Lightbulb, Home, Calendar, Bot, Flag, User, PartyPopper } from 'lucide-react';
 import CountrySwitcher from '@/components/CountrySwitcher';
+import GuestBanner from '@/components/GuestBanner';
+import { clearGuestSession } from '@/pages/Auth';
 
 export default function Layout({ children, onLogout }) {
+  const navigate = useNavigate();
   const location = useLocation();
   const currentPageName = location.pathname.split('/')[1]?.charAt(0).toUpperCase() + location.pathname.split('/')[1]?.slice(1) || 'Home';
 
@@ -46,6 +49,18 @@ export default function Layout({ children, onLogout }) {
       
       {/* Cover for safe area at bottom */}
       <div className="bottom-safe-area"></div>
+      
+      {/* Guest Mode Banner */}
+      <GuestBanner 
+        onExpired={() => {
+          clearGuestSession();
+          if (onLogout) onLogout();
+        }}
+        onSignUp={() => {
+          clearGuestSession();
+          if (onLogout) onLogout();
+        }}
+      />
       
       {/* Country Switcher - Floating on left side */}
       <CountrySwitcher />

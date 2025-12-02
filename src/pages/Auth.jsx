@@ -1,10 +1,69 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Mail, Lock, User, Phone, Eye, EyeOff, Sparkles, MapPin, ArrowLeft, KeyRound } from 'lucide-react';
+import { MessageSquare, Mail, Lock, User, Phone, Eye, EyeOff, Sparkles, MapPin, ArrowLeft, KeyRound, Clock, UserX } from 'lucide-react';
 import { getBackendUrl } from '@/utils/getBackendUrl';
 import countries from '@/config/countries';
 import { Capacitor } from '@capacitor/core';
+
+// Guest mode utilities
+export const initGuestSession = () => {
+  const guestSession = {
+    isGuest: true,
+    startTime: Date.now(),
+    expiresAt: Date.now() + (5 * 60 * 1000), // 5 minutes
+    screenshotCredits: 2,
+    usedCredits: 0
+  };
+  localStorage.setItem('guestSession', JSON.stringify(guestSession));
+  localStorage.setItem('isAuthenticated', 'true');
+  localStorage.setItem('isGuest', 'true');
+  return guestSession;
+};
+
+export const getGuestSession = () => {
+  try {
+    const session = localStorage.getItem('guestSession');
+    return session ? JSON.parse(session) : null;
+  } catch {
+    return null;
+  }
+};
+
+export const isGuestSessionValid = () => {
+  const session = getGuestSession();
+  if (!session) return false;
+  return Date.now() < session.expiresAt;
+};
+
+export const getGuestTimeRemaining = () => {
+  const session = getGuestSession();
+  if (!session) return 0;
+  const remaining = session.expiresAt - Date.now();
+  return Math.max(0, remaining);
+};
+
+export const getGuestCreditsRemaining = () => {
+  const session = getGuestSession();
+  if (!session) return 0;
+  return Math.max(0, session.screenshotCredits - session.usedCredits);
+};
+
+export const useGuestCredit = () => {
+  const session = getGuestSession();
+  if (!session) return false;
+  if (session.usedCredits >= session.screenshotCredits) return false;
+  
+  session.usedCredits += 1;
+  localStorage.setItem('guestSession', JSON.stringify(session));
+  return true;
+};
+
+export const clearGuestSession = () => {
+  localStorage.removeItem('guestSession');
+  localStorage.removeItem('isGuest');
+  localStorage.removeItem('isAuthenticated');
+};
 
 export default function Auth({ onAuthSuccess }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -831,6 +890,48 @@ export default function Auth({ onAuthSuccess }) {
             </p>
           )}
         </Card>
+
+        {/* Guest Mode Divider */}
+        <div className="flex items-center gap-4 my-6">
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-600 to-transparent"></div>
+          <span className="text-slate-500 text-sm">ose</span>
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-600 to-transparent"></div>
+        </div>
+
+        {/* Guest Mode Button */}
+        <button
+          onClick={() => {
+            initGuestSession();
+            if (onAuthSuccess) {
+              onAuthSuccess({ 
+                isGuest: true, 
+                username: 'Vizitor',
+                expiresIn: '5 minuta'
+              });
+            }
+          }}
+          className="w-full group relative overflow-hidden px-6 py-4 bg-slate-800/50 hover:bg-slate-700/50 border-2 border-dashed border-slate-600 hover:border-cyan-500/50 rounded-2xl transition-all duration-300"
+        >
+          <div className="flex items-center justify-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center group-hover:from-cyan-600 group-hover:to-blue-600 transition-all">
+              <UserX className="w-5 h-5 text-slate-300 group-hover:text-white" />
+            </div>
+            <div className="text-left">
+              <p className="text-white font-semibold">Vazhdo si Vizitor</p>
+              <p className="text-slate-400 text-xs flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                5 minuta akses • 2 kredite screenshot
+              </p>
+            </div>
+          </div>
+          {/* Subtle glow on hover */}
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 via-cyan-500/5 to-cyan-500/0 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl" />
+        </button>
+
+        {/* Guest Mode Info */}
+        <p className="text-xs text-slate-500 text-center mt-3">
+          Si vizitor ke akses të limituar. Regjistrohu për akses të plotë.
+        </p>
 
         {/* Additional Info */}
         <div className="mt-6 text-center">
