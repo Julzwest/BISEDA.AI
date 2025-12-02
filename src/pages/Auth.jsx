@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Mail, Lock, User, Phone, Eye, EyeOff, Sparkles, MapPin, ArrowLeft, KeyRound, Clock, UserX } from 'lucide-react';
+import { MessageSquare, Mail, Lock, User, Phone, Eye, EyeOff, Sparkles, MapPin, ArrowLeft, KeyRound, UserX } from 'lucide-react';
 import { getBackendUrl } from '@/utils/getBackendUrl';
 import countries from '@/config/countries';
 import { Capacitor } from '@capacitor/core';
 
-// Guest mode utilities
+// Guest mode utilities - No time limit, no screenshot limit
 export const initGuestSession = () => {
   const guestSession = {
     isGuest: true,
     startTime: Date.now(),
-    expiresAt: Date.now() + (5 * 60 * 1000), // 5 minutes
-    screenshotCredits: 2,
+    // No expiration - guests can use indefinitely
+    expiresAt: null,
+    // Unlimited screenshots
+    screenshotCredits: Infinity,
     usedCredits: 0
   };
   localStorage.setItem('guestSession', JSON.stringify(guestSession));
@@ -33,29 +35,22 @@ export const getGuestSession = () => {
 export const isGuestSessionValid = () => {
   const session = getGuestSession();
   if (!session) return false;
-  return Date.now() < session.expiresAt;
+  // Always valid since no time limit
+  return true;
 };
 
 export const getGuestTimeRemaining = () => {
-  const session = getGuestSession();
-  if (!session) return 0;
-  const remaining = session.expiresAt - Date.now();
-  return Math.max(0, remaining);
+  // No time limit - return a large number
+  return Infinity;
 };
 
 export const getGuestCreditsRemaining = () => {
-  const session = getGuestSession();
-  if (!session) return 0;
-  return Math.max(0, session.screenshotCredits - session.usedCredits);
+  // Unlimited credits
+  return Infinity;
 };
 
 export const useGuestCredit = () => {
-  const session = getGuestSession();
-  if (!session) return false;
-  if (session.usedCredits >= session.screenshotCredits) return false;
-  
-  session.usedCredits += 1;
-  localStorage.setItem('guestSession', JSON.stringify(session));
+  // Always allow - no limit
   return true;
 };
 
@@ -906,8 +901,7 @@ export default function Auth({ onAuthSuccess }) {
             if (onAuthSuccess) {
               onAuthSuccess({ 
                 isGuest: true, 
-                username: 'Vizitor',
-                expiresIn: '5 minuta'
+                username: 'Vizitor'
               });
             }
           }}
@@ -920,9 +914,8 @@ export default function Auth({ onAuthSuccess }) {
         </Button>
         
         {/* Guest Mode Info */}
-        <p className="text-xs text-slate-400 text-center mt-3 flex items-center justify-center gap-2">
-          <Clock className="w-3.5 h-3.5" />
-          5 minuta akses • 2 kredite screenshot
+        <p className="text-xs text-slate-400 text-center mt-3">
+          Eksploro aplikacionin pa llogari
         </p>
 
         {/* Additional Info */}
