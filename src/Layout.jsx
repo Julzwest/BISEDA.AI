@@ -1,15 +1,24 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from './utils';
 import { Lightbulb, Home, Calendar, Bot, Flag, User, PartyPopper } from 'lucide-react';
 import CountrySwitcher from '@/components/CountrySwitcher';
 import GuestBanner from '@/components/GuestBanner';
+import ThemeSwitcher from '@/components/ThemeSwitcher';
 import { clearGuestSession } from '@/pages/Auth';
+import { trackPageView } from '@/utils/analytics';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function Layout({ children, onLogout }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { themeConfig, isDark } = useTheme();
   const currentPageName = location.pathname.split('/')[1]?.charAt(0).toUpperCase() + location.pathname.split('/')[1]?.slice(1) || 'Home';
+
+  // Track page views
+  useEffect(() => {
+    trackPageView(currentPageName);
+  }, [currentPageName]);
 
   const navItems = [
     { name: 'Home', icon: Home, page: 'Home' },
@@ -65,8 +74,9 @@ export default function Layout({ children, onLogout }) {
       {/* Country Switcher - Floating on left side */}
       <CountrySwitcher />
       
-      {/* Top Bar with User Profile Link */}
-      <div style={{ position: 'fixed', top: '16px', right: '16px', zIndex: 9999 }}>
+      {/* Top Bar with Theme Switcher and User Profile Link */}
+      <div style={{ position: 'fixed', top: '16px', right: '16px', zIndex: 9999 }} className="flex items-center gap-2">
+        <ThemeSwitcher />
         <Link to="/profile">
           <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg hover:scale-105 hover:shadow-purple-500/30 transition-all duration-200">
             <User className="w-5 h-5 text-white" />

@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Sparkles, MapPin, Star, Music, PartyPopper, Globe, ExternalLink, Search, Heart, Gift, Flag, ChevronRight, Clock } from 'lucide-react';
+import { Calendar, Sparkles, MapPin, Star, Music, PartyPopper, Globe, ExternalLink, Search, Heart, Gift, Flag, ChevronRight, Clock, Bookmark, BookmarkCheck, Share2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { countries, getCitiesForCountry, getCountryByCode, getCityNameEn } from '@/config/countries';
 import { getBackendUrl } from '@/utils/getBackendUrl';
+import ShareButton from '@/components/ShareButton';
+import PullToRefresh from '@/components/PullToRefresh';
+import { toggleVenueFavorite, isVenueFavorited } from '@/utils/favorites';
+import { trackFeatureUse } from '@/utils/analytics';
 
 // Festive dates data by country
 const festiveDatesByCountry = {
@@ -77,6 +81,7 @@ export default function Events() {
   const [showAllFestive, setShowAllFestive] = useState(false);
   const [visibleCount, setVisibleCount] = useState(5); // Show 5 initially
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [favoriteIds, setFavoriteIds] = useState(new Set());
 
   // Listen for country changes from the global CountrySwitcher
   useEffect(() => {
@@ -220,10 +225,39 @@ export default function Events() {
   useEffect(() => {
     if (selectedCity) {
       searchLocalEvents();
+      trackFeatureUse('events', 'search');
     }
   }, [selectedCity, eventType]);
 
+  // Handle favorite toggle
+  const handleFavoriteToggle = (venue) => {
+    const isFavorited = toggleVenueFavorite(venue);
+    setFavoriteIds(prev => {
+      const newSet = new Set(prev);
+      if (isFavorited) {
+        newSet.add(venue.id || venue.name);
+      } else {
+        newSet.delete(venue.id || venue.name);
+      }
+      return newSet;
+    });
+    trackFeatureUse('events', 'venueClick');
+  };
+
+  // Check if venue is favorited
+  const checkFavorite = (venue) => {
+    return favoriteIds.has(venue.id || venue.name) || isVenueFavorited(venue.id, venue.name);
+  };
+
+  // Handle refresh
+  const handleRefresh = async () => {
+    if (selectedCity) {
+      await searchLocalEvents();
+    }
+  };
+
   return (
+    <PullToRefresh onRefresh={handleRefresh}>
     <div className="px-6 pt-20 pb-32 bg-gradient-to-b from-slate-950 via-purple-950/20 to-slate-950">
       {/* Header */}
       <div className="mb-6 text-center">
@@ -469,18 +503,45 @@ export default function Events() {
                       {venue.location && (
                         <p className="text-slate-400 text-xs mb-3">📍 {venue.location}</p>
                       )}
-                      {venue.googleMapsLink && (
-                        <a
-                          href={venue.googleMapsLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-4 py-2 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/50 rounded-lg text-sm font-semibold text-yellow-300 transition-all"
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {venue.googleMapsLink && (
+                          <a
+                            href={venue.googleMapsLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-4 py-2 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/50 rounded-lg text-sm font-semibold text-yellow-300 transition-all"
+                          >
+                            <MapPin className="w-4 h-4" />
+                            Google Maps
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+                        
+                        {/* Favorite Button */}
+                        <button
+                          onClick={() => handleFavoriteToggle(venue)}
+                          className={`p-2 rounded-lg transition-all ${
+                            checkFavorite(venue)
+                              ? 'bg-pink-500/30 border border-pink-500/50 text-pink-300'
+                              : 'bg-slate-700/50 border border-slate-600/50 text-slate-400 hover:text-pink-300 hover:bg-pink-500/20'
+                          }`}
+                          title={checkFavorite(venue) ? 'Hiq nga të preferuarat' : 'Shto në të preferuara'}
                         >
-                          <MapPin className="w-4 h-4" />
-                          Shiko në Google Maps
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      )}
+                          {checkFavorite(venue) ? (
+                            <BookmarkCheck className="w-4 h-4" />
+                          ) : (
+                            <Bookmark className="w-4 h-4" />
+                          )}
+                        </button>
+                        
+                        {/* Share Button */}
+                        <ShareButton
+                          variant="mini"
+                          title={venue.name}
+                          text={`Shiko ${venue.name} në ${selectedCity}! 🎉`}
+                          url={venue.googleMapsLink || window.location.href}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -565,6 +626,7 @@ export default function Events() {
         </div>
       </Card>
     </div>
+    </PullToRefresh>
   );
 }
 

@@ -14,18 +14,29 @@ import SubscriptionCancel from './pages/SubscriptionCancel.jsx';
 import Admin from './pages/Admin.jsx';
 import Auth from './pages/Auth.jsx';
 import UserProfile from './pages/UserProfile.jsx';
+import OnboardingTutorial from './components/OnboardingTutorial.jsx';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
 
   useEffect(() => {
     // Check if user is already authenticated
     const authStatus = localStorage.getItem('isAuthenticated');
     const userId = localStorage.getItem('userId');
+    const guestStatus = localStorage.getItem('isGuest');
     
-    if (authStatus === 'true' && userId) {
+    if (authStatus === 'true' && (userId || guestStatus === 'true')) {
       setIsAuthenticated(true);
+      setIsGuest(guestStatus === 'true');
+      
+      // Check if should show onboarding
+      const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
+      if (!hasSeenOnboarding) {
+        setShowOnboarding(true);
+      }
     }
     
     setIsCheckingAuth(false);
@@ -34,6 +45,13 @@ function App() {
   const handleAuthSuccess = (user) => {
     console.log('✅ User authenticated:', user);
     setIsAuthenticated(true);
+    setIsGuest(user?.isGuest || false);
+    
+    // Show onboarding for new users
+    const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
+    if (!hasSeenOnboarding) {
+      setShowOnboarding(true);
+    }
   };
 
   const handleLogout = () => {
@@ -64,6 +82,14 @@ function App() {
   // Show main app if authenticated
   return (
     <Router>
+      {/* Onboarding Tutorial */}
+      {showOnboarding && (
+        <OnboardingTutorial 
+          onComplete={() => setShowOnboarding(false)} 
+          isGuest={isGuest}
+        />
+      )}
+      
       <Layout onLogout={handleLogout}>
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />

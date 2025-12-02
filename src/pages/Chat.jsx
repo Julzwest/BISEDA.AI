@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Send, MessageSquare, Image as ImageIcon, X } from 'lucide-react';
+import { Send, MessageSquare, Image as ImageIcon, X, History, Plus, Trash2, ChevronRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
@@ -10,6 +10,14 @@ import LimitReachedModal from '@/components/LimitReachedModal';
 import CrisisHelplineModal from '@/components/CrisisHelplineModal';
 import { UNIFIED_AI_SYSTEM_PROMPT } from '@/utils/unifiedAIPrompt';
 import { getBackendUrl } from '@/utils/getBackendUrl';
+import { trackFeatureUse } from '@/utils/analytics';
+import { 
+  startNewConversation, 
+  addMessageToConversation, 
+  getRecentConversations, 
+  getConversation,
+  deleteConversation 
+} from '@/utils/chatHistory';
 
 const CATEGORIES = {
   'chat': {
@@ -69,6 +77,9 @@ export default function Chat() {
   const [usage, setUsage] = useState(null);
   const [screenshotUsage, setScreenshotUsage] = useState({ used: 0, freeLimit: 2, remaining: 2 });
   const [showScreenshotLimitModal, setShowScreenshotLimitModal] = useState(false);
+  const [currentConversationId, setCurrentConversationId] = useState(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [chatHistoryList, setChatHistoryList] = useState([]);
   const backendUrl = getBackendUrl();
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -87,7 +98,56 @@ export default function Chat() {
     // Initialize conversation history with greeting
     setConversationHistory([{ role: 'assistant', content: greeting }]);
     setIsInitialized(true);
+    
+    // Start a new conversation for chat history
+    const convId = startNewConversation('AI Coach Bisedë');
+    setCurrentConversationId(convId);
+    addMessageToConversation(convId, { role: 'assistant', content: greeting });
+    
+    // Load chat history list
+    setChatHistoryList(getRecentConversations(10));
   }, [selectedCategory]);
+
+  // Load a previous conversation
+  const loadConversation = (convId) => {
+    const conv = getConversation(convId);
+    if (conv) {
+      setMessages(conv.messages.map(m => ({
+        ...m,
+        timestamp: new Date(m.timestamp)
+      })));
+      setConversationHistory(conv.messages.map(m => ({
+        role: m.role,
+        content: m.content
+      })));
+      setCurrentConversationId(convId);
+      setShowHistory(false);
+    }
+  };
+
+  // Start a new chat
+  const startNewChat = () => {
+    const greeting = category.greeting;
+    const greetingMessage = { role: 'assistant', content: greeting, timestamp: new Date() };
+    setMessages([greetingMessage]);
+    setConversationHistory([{ role: 'assistant', content: greeting }]);
+    
+    const convId = startNewConversation('AI Coach Bisedë');
+    setCurrentConversationId(convId);
+    addMessageToConversation(convId, { role: 'assistant', content: greeting });
+    setChatHistoryList(getRecentConversations(10));
+    setShowHistory(false);
+  };
+
+  // Delete a conversation
+  const handleDeleteConversation = (convId, e) => {
+    e.stopPropagation();
+    deleteConversation(convId);
+    setChatHistoryList(getRecentConversations(10));
+    if (convId === currentConversationId) {
+      startNewChat();
+    }
+  };
 
   // Sync with URL param when it changes
   React.useEffect(() => {
@@ -307,6 +367,12 @@ export default function Chat() {
       const aiMsg = { role: 'assistant', content: aiResponse, timestamp: new Date() };
       setMessages(prev => [...prev, aiMsg]);
       setConversationHistory([...updatedHistory, { role: 'assistant', content: aiResponse }]);
+      
+      // Save AI response to chat history
+      if (currentConversationId) {
+        addMessageToConversation(currentConversationId, { role: 'assistant', content: aiResponse });
+        setChatHistoryList(getRecentConversations(10));
+      }
 
     } catch (error) {
       // Check if it's a limit/subscription error
@@ -354,6 +420,12 @@ export default function Chat() {
     const updatedHistory = [...conversationHistory, { role: 'user', content: userMessage }];
     setConversationHistory(updatedHistory);
 
+    // Save to chat history
+    if (currentConversationId) {
+      addMessageToConversation(currentConversationId, { role: 'user', content: userMessage });
+    }
+    trackFeatureUse('aiCoach', 'message');
+
     setIsLoading(true);
 
     try {
@@ -399,9 +471,101 @@ export default function Chat() {
 
   return (
     <div className="flex flex-col px-6 pt-20 pb-32" style={{ minHeight: '100vh' }}>
+      {/* Chat History Sidebar */}
+      {showHistory && (
+        <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm animate-fadeIn" onClick={() => setShowHistory(false)}>
+          <div 
+            className="absolute left-0 top-0 bottom-0 w-80 max-w-[85vw] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-r border-slate-700/50 p-4 animate-slideInLeft overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <History className="w-5 h-5 text-purple-400" />
+                Historia e Bisedave
+              </h2>
+              <button
+                onClick={() => setShowHistory(false)}
+                className="p-2 rounded-lg bg-slate-700/50 hover:bg-slate-600/50 text-slate-400 hover:text-white transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* New Chat Button */}
+            <button
+              onClick={startNewChat}
+              className="w-full mb-4 flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-500/30 hover:to-pink-500/30 border border-purple-500/50 rounded-xl text-purple-300 font-semibold transition-all"
+            >
+              <Plus className="w-5 h-5" />
+              Bisedë e Re
+            </button>
+
+            {/* Chat History List */}
+            <div className="space-y-2">
+              {chatHistoryList.length === 0 ? (
+                <p className="text-slate-500 text-sm text-center py-4">Nuk ka biseda të ruajtura</p>
+              ) : (
+                chatHistoryList.map((conv) => (
+                  <div
+                    key={conv.id}
+                    onClick={() => loadConversation(conv.id)}
+                    className={`group p-3 rounded-xl cursor-pointer transition-all ${
+                      conv.id === currentConversationId
+                        ? 'bg-purple-500/20 border border-purple-500/50'
+                        : 'bg-slate-800/50 hover:bg-slate-700/50 border border-transparent'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-white font-medium text-sm truncate">{conv.title}</h3>
+                        <p className="text-slate-400 text-xs truncate mt-1">{conv.preview || 'Bisedë e re'}</p>
+                        <p className="text-slate-500 text-xs mt-1">
+                          {new Date(conv.updatedAt).toLocaleDateString('sq-AL')} • {conv.messageCount} mesazhe
+                        </p>
+                      </div>
+                      <button
+                        onClick={(e) => handleDeleteConversation(conv.id, e)}
+                        className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-all"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+          
+          <style>{`
+            @keyframes fadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+            @keyframes slideInLeft {
+              from { opacity: 0; transform: translateX(-100%); }
+              to { opacity: 1; transform: translateX(0); }
+            }
+            .animate-fadeIn { animation: fadeIn 0.2s ease-out; }
+            .animate-slideInLeft { animation: slideInLeft 0.3s ease-out; }
+          `}</style>
+        </div>
+      )}
+
       <div className="text-center mb-6" style={{ position: 'relative', zIndex: 20 }}>
         <div className="flex items-center justify-between mb-2">
-          <div className="flex-1"></div>
+          {/* History Button */}
+          <div className="flex-1 flex justify-start">
+            <button
+              onClick={() => {
+                setChatHistoryList(getRecentConversations(10));
+                setShowHistory(true);
+              }}
+              className="p-2 rounded-xl bg-slate-800/50 hover:bg-slate-700/50 text-slate-400 hover:text-white transition-all"
+              title="Historia e bisedave"
+            >
+              <History className="w-5 h-5" />
+            </button>
+          </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent flex-1">
             Biseda.Ai
           </h1>
