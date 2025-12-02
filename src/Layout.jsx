@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from './utils';
 import { Lightbulb, Home, Calendar, Bot, Flag, User, PartyPopper } from 'lucide-react';
+import CountrySwitcher from '@/components/CountrySwitcher';
 
 export default function Layout({ children, onLogout }) {
   const location = useLocation();
@@ -45,6 +46,9 @@ export default function Layout({ children, onLogout }) {
       
       {/* Cover for safe area at bottom */}
       <div className="bottom-safe-area"></div>
+      
+      {/* Country Switcher - Floating on left side */}
+      <CountrySwitcher />
       
       {/* Top Bar with User Profile Link */}
       <div style={{ position: 'fixed', top: '16px', right: '16px', zIndex: 9999 }}>
