@@ -254,17 +254,20 @@ Përgjigju në shqip duke u bazuar në kontekstin e mëparshëm. Jep këshilla t
 
   return (
     <div className="px-6 pt-20 pb-32">
-      {/* Header - Now scrolls with content */}
-      <div className="pt-6 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center">
-            <Lightbulb className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-white">Këshilla & Tips</h1>
-            <p className="text-xs text-slate-400">Përmirëso lojën tënde</p>
+      {/* Header - Centered like other pages */}
+      <div className="mb-6 text-center">
+        <div className="inline-block mb-3">
+          <div className="relative">
+            <div className="w-20 h-20 bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 rounded-3xl flex items-center justify-center shadow-2xl shadow-amber-500/50 animate-pulse">
+              <Lightbulb className="w-10 h-10 text-white" />
+            </div>
+            <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center animate-bounce">
+              <Sparkles className="w-3 h-3 text-slate-900" />
+            </div>
           </div>
         </div>
+        <h1 className="text-2xl font-bold text-white mb-1">Këshilla & Tips</h1>
+        <p className="text-slate-400 text-sm">Përmirëso lojën tënde ✨</p>
       </div>
 
       <div className="px-0 py-4">
