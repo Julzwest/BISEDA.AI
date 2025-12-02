@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Sparkles, MapPin, Star, Music, PartyPopper, Globe, ExternalLink, Search, Heart, Gift, Flag, ChevronRight, Clock, Bookmark, BookmarkCheck, Share2 } from 'lucide-react';
+import { Calendar, Sparkles, MapPin, Star, Music, PartyPopper, Globe, ExternalLink, Search, Heart, Gift, Flag, ChevronRight, Clock, Bookmark, BookmarkCheck, Share2, Ticket } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { countries, getCitiesForCountry, getCountryByCode, getCityNameEn } from '@/config/countries';
@@ -159,16 +159,24 @@ export default function Events() {
     }
   };
 
+  // Generate ticket search URL
+  const getTicketSearchUrl = (cityName) => {
+    const cityNameEn = getCityNameEn(userCountry, cityName) || cityName;
+    const countryNameEn = currentCountry?.nameEn || 'Albania';
+    return `https://www.google.com/search?q=events+tickets+${encodeURIComponent(cityNameEn)}+${encodeURIComponent(countryNameEn)}+2024`;
+  };
+
   // Search for local events
   const searchLocalEvents = async () => {
     if (!selectedCity) return;
     
     setIsLoadingEvents(true);
     setLocalEvents([]);
-    setVisibleCount(5); // Reset visible count on new search
+    setVisibleCount(10); // Show more results initially
 
     try {
-      const cityNameEn = getCityNameEn(userCountry, selectedCity);
+      // Use the city name directly - works for both predefined and custom cities
+      const cityNameEn = getCityNameEn(userCountry, selectedCity) || selectedCity;
       const countryNameEn = currentCountry?.nameEn || 'Albania';
       
       console.log('🎉 Searching for events in', cityNameEn, countryNameEn);
@@ -181,7 +189,8 @@ export default function Events() {
         body: JSON.stringify({
           query: getSearchQuery(eventType),
           location: `${cityNameEn}, ${countryNameEn}`,
-          category: 'events'
+          category: 'events',
+          maxResults: 20 // Request more results
         })
       });
 
@@ -200,7 +209,9 @@ export default function Events() {
             googleMapsLink: place.googleMapsLink,
             isOpen: place.isOpen,
             type: 'venue',
-            reviewCount: place.reviewCount
+            reviewCount: place.reviewCount,
+            // Add ticket search link
+            ticketSearchUrl: `https://www.google.com/search?q=${encodeURIComponent(place.name)}+tickets+events+${encodeURIComponent(cityNameEn)}`
           }));
           
           setLocalEvents(formattedEvents);
@@ -530,19 +541,32 @@ export default function Events() {
                         </div>
                       )}
 
-                      {/* Actions */}
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {venue.googleMapsLink && (
-                          <a
-                            href={venue.googleMapsLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/40 rounded-xl text-xs font-bold text-yellow-300 transition-all hover:scale-105"
-                          >
-                            <MapPin className="w-3.5 h-3.5" />
-                            Google Maps
-                          </a>
-                        )}
+                        {/* Actions */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {venue.googleMapsLink && (
+                            <a
+                              href={venue.googleMapsLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-4 py-2 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/40 rounded-xl text-xs font-bold text-yellow-300 transition-all hover:scale-105"
+                            >
+                              <MapPin className="w-3.5 h-3.5" />
+                              Maps
+                            </a>
+                          )}
+                          
+                          {/* Ticket Search Button */}
+                          {venue.ticketSearchUrl && (
+                            <a
+                              href={venue.ticketSearchUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 rounded-xl text-xs font-bold text-purple-300 transition-all hover:scale-105"
+                            >
+                              <Ticket className="w-3.5 h-3.5" />
+                              Bileta
+                            </a>
+                          )}
                         
                         {/* Favorite Button */}
                         <button
@@ -615,6 +639,29 @@ export default function Events() {
               Duke shfaqur {Math.min(visibleCount, localEvents.length)} nga {localEvents.length} vende
             </p>
           )}
+
+          {/* Search Tickets Online Section */}
+          <div className="mt-6 p-4 bg-gradient-to-r from-purple-900/30 via-pink-900/20 to-purple-900/30 border border-purple-500/30 rounded-2xl">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                <Ticket className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-white font-bold">Kërko Bileta Online</h3>
+                <p className="text-slate-400 text-xs">Gjej bileta për evente në {selectedCity}</p>
+              </div>
+            </div>
+            <a
+              href={getTicketSearchUrl(selectedCity)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-xl text-white font-bold transition-all hover:scale-[1.02]"
+            >
+              <Search className="w-4 h-4" />
+              Kërko Bileta për {selectedCity}
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          </div>
         </div>
       )}
 
