@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
-import { Lightbulb, TrendingUp, Zap, Star, Sparkles, Heart, Clipboard, MessageSquare, Calendar, Bot, Flag, Gift } from 'lucide-react';
+import { Lightbulb, TrendingUp, Zap, Star, Sparkles, Heart, Clipboard, MessageSquare, Calendar, Bot, Flag, Gift, PartyPopper } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import UsageDisplay from '@/components/UsageDisplay';
@@ -64,11 +64,11 @@ export default function Home() {
       page: 'Tips'
     },
     {
-      icon: Flag,
-      title: 'Datat Festive',
-      description: 'Shiko datat festive kombëtare dhe kulturore për takime speciale dhe planifikim',
-      color: 'from-red-500 to-orange-500',
-      page: 'FestiveDates'
+      icon: PartyPopper,
+      title: 'Evente Lokale',
+      description: 'Gjej vende eventesh, koncerte, klube dhe argëtim në qytetin tënd',
+      color: 'from-yellow-500 to-orange-500',
+      page: 'Events'
     },
     {
       icon: Gift,
