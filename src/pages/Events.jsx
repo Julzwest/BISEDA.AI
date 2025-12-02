@@ -1,9 +1,66 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Sparkles, MapPin, Star, Music, PartyPopper, Globe, ExternalLink, Search } from 'lucide-react';
+import { Calendar, Sparkles, MapPin, Star, Music, PartyPopper, Globe, ExternalLink, Search, Heart, Gift, Flag, ChevronRight, Clock } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { countries, getCitiesForCountry, getCountryByCode, getCityNameEn } from '@/config/countries';
 import { getBackendUrl } from '@/utils/getBackendUrl';
+
+// Festive dates data by country
+const festiveDatesByCountry = {
+  AL: [
+    { month: 0, date: 1, name: 'Dita e Vitit të Ri', icon: Sparkles, color: 'from-blue-500 to-cyan-500', emoji: '🎆' },
+    { month: 0, date: 11, name: 'Dita e Republikës', icon: Flag, color: 'from-red-500 to-orange-500', emoji: '🇦🇱' },
+    { month: 1, date: 14, name: 'Dita e Dashurisë', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💕' },
+    { month: 2, date: 7, name: 'Dita e Mësuesit', icon: Star, color: 'from-yellow-500 to-amber-500', emoji: '📚' },
+    { month: 2, date: 14, name: 'Dita e Verës', icon: Sparkles, color: 'from-green-500 to-emerald-500', emoji: '🌸' },
+    { month: 2, date: 22, name: 'Dita e Nevruzit', icon: Sparkles, color: 'from-purple-500 to-pink-500', emoji: '🌷' },
+    { month: 4, date: 1, name: 'Dita e Punëtorëve', icon: Star, color: 'from-red-500 to-orange-500', emoji: '✊' },
+    { month: 4, date: 5, name: 'Dita e Nënës', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💐' },
+    { month: 5, date: 1, name: 'Dita e Fëmijëve', icon: Gift, color: 'from-yellow-500 to-orange-500', emoji: '🎈' },
+    { month: 10, date: 28, name: 'Dita e Flamurit', icon: Flag, color: 'from-red-500 to-black-500', emoji: '🇦🇱' },
+    { month: 10, date: 29, name: 'Dita e Çlirimit', icon: Flag, color: 'from-red-500 to-orange-500', emoji: '🎖️' },
+    { month: 11, date: 25, name: 'Krishtlindjet', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎄' },
+    { month: 11, date: 31, name: 'Nata e Vitit të Ri', icon: Sparkles, color: 'from-purple-500 to-pink-500', emoji: '🎉' }
+  ],
+  XK: [
+    { month: 0, date: 1, name: 'Dita e Vitit të Ri', icon: Sparkles, color: 'from-blue-500 to-cyan-500', emoji: '🎆' },
+    { month: 1, date: 14, name: 'Dita e Dashurisë', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💕' },
+    { month: 1, date: 17, name: 'Dita e Pavarësisë', icon: Flag, color: 'from-blue-500 to-yellow-500', emoji: '🇽🇰' },
+    { month: 11, date: 25, name: 'Krishtlindjet', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎄' },
+    { month: 11, date: 31, name: 'Nata e Vitit të Ri', icon: Sparkles, color: 'from-purple-500 to-pink-500', emoji: '🎉' }
+  ],
+  GB: [
+    { month: 0, date: 1, name: 'New Year\'s Day', icon: Sparkles, color: 'from-blue-500 to-cyan-500', emoji: '🎆' },
+    { month: 1, date: 14, name: 'Valentine\'s Day', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💕' },
+    { month: 10, date: 5, name: 'Bonfire Night', icon: Sparkles, color: 'from-orange-500 to-red-500', emoji: '🎆' },
+    { month: 11, date: 25, name: 'Christmas', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎄' },
+    { month: 11, date: 31, name: 'New Year\'s Eve', icon: Sparkles, color: 'from-purple-500 to-pink-500', emoji: '🎉' }
+  ],
+  DE: [
+    { month: 0, date: 1, name: 'Neujahr', icon: Sparkles, color: 'from-blue-500 to-cyan-500', emoji: '🎆' },
+    { month: 1, date: 14, name: 'Valentinstag', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💕' },
+    { month: 9, date: 3, name: 'Tag der Deutschen Einheit', icon: Flag, color: 'from-black-500 to-yellow-500', emoji: '🇩🇪' },
+    { month: 11, date: 25, name: 'Weihnachten', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎄' },
+    { month: 11, date: 31, name: 'Silvester', icon: Sparkles, color: 'from-purple-500 to-pink-500', emoji: '🎉' }
+  ],
+  US: [
+    { month: 0, date: 1, name: 'New Year\'s Day', icon: Sparkles, color: 'from-blue-500 to-cyan-500', emoji: '🎆' },
+    { month: 1, date: 14, name: 'Valentine\'s Day', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💕' },
+    { month: 6, date: 4, name: 'Independence Day', icon: Flag, color: 'from-red-500 to-blue-500', emoji: '🇺🇸' },
+    { month: 9, date: 31, name: 'Halloween', icon: Sparkles, color: 'from-orange-500 to-purple-500', emoji: '🎃' },
+    { month: 10, date: 28, name: 'Thanksgiving', icon: Gift, color: 'from-orange-500 to-amber-500', emoji: '🦃' },
+    { month: 11, date: 25, name: 'Christmas', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎄' },
+    { month: 11, date: 31, name: 'New Year\'s Eve', icon: Sparkles, color: 'from-purple-500 to-pink-500', emoji: '🎉' }
+  ]
+};
+
+// Default festive dates for countries not specifically defined
+const defaultFestiveDates = [
+  { month: 0, date: 1, name: 'Dita e Vitit të Ri', icon: Sparkles, color: 'from-blue-500 to-cyan-500', emoji: '🎆' },
+  { month: 1, date: 14, name: 'Dita e Dashurisë', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💕' },
+  { month: 11, date: 25, name: 'Krishtlindjet', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎄' },
+  { month: 11, date: 31, name: 'Nata e Vitit të Ri', icon: Sparkles, color: 'from-purple-500 to-pink-500', emoji: '🎉' }
+];
 
 export default function Events() {
   const backendUrl = getBackendUrl();
@@ -17,6 +74,40 @@ export default function Events() {
   const [localEvents, setLocalEvents] = useState([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
   const [eventType, setEventType] = useState('all');
+  const [showAllFestive, setShowAllFestive] = useState(false);
+
+  // Get upcoming festive dates
+  const getUpcomingFestiveDates = () => {
+    const festiveDates = festiveDatesByCountry[userCountry] || defaultFestiveDates;
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    
+    // Calculate days until each festive date
+    const upcomingDates = festiveDates.map(festive => {
+      let festiveDate = new Date(currentYear, festive.month, festive.date);
+      
+      // If the date has passed this year, use next year
+      if (festiveDate < today) {
+        festiveDate = new Date(currentYear + 1, festive.month, festive.date);
+      }
+      
+      const diffTime = festiveDate - today;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      return {
+        ...festive,
+        daysUntil: diffDays,
+        fullDate: festiveDate
+      };
+    });
+    
+    // Sort by days until
+    return upcomingDates.sort((a, b) => a.daysUntil - b.daysUntil);
+  };
+
+  const upcomingFestiveDates = getUpcomingFestiveDates();
+  const nextFestive = upcomingFestiveDates[0];
+  const months = ['Jan', 'Shk', 'Mar', 'Pri', 'Maj', 'Qer', 'Kor', 'Gus', 'Sht', 'Tet', 'Nën', 'Dhj'];
 
   const eventTypes = [
     { id: 'all', name: 'Të gjitha', icon: PartyPopper },
@@ -117,6 +208,103 @@ export default function Events() {
         </h1>
         <p className="text-slate-400 text-sm">Gjej vende eventesh dhe argëtimi në qytetin tënd</p>
       </div>
+
+      {/* 🎯 GENIUS INTEGRATION: Upcoming Festive Dates Countdown */}
+      {nextFestive && (
+        <div className="mb-6">
+          {/* Main Countdown Card */}
+          <div 
+            className={`relative overflow-hidden rounded-2xl bg-gradient-to-r ${nextFestive.color} p-[2px] cursor-pointer group`}
+            onClick={() => setShowAllFestive(!showAllFestive)}
+          >
+            <div className="relative bg-slate-900/95 backdrop-blur-xl rounded-2xl p-4">
+              {/* Animated background effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-white/5 via-transparent to-white/5 animate-pulse rounded-2xl" />
+              
+              <div className="relative flex items-center gap-4">
+                {/* Emoji with pulse */}
+                <div className="relative">
+                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${nextFestive.color} flex items-center justify-center shadow-lg`}>
+                    <span className="text-2xl">{nextFestive.emoji}</span>
+                  </div>
+                  {nextFestive.daysUntil <= 7 && (
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center animate-bounce">
+                      <span className="text-[10px] text-white font-bold">!</span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs text-slate-400 uppercase tracking-wider">Festa e ardhshme</span>
+                    {nextFestive.daysUntil <= 3 && (
+                      <span className="px-2 py-0.5 bg-red-500/20 border border-red-500/50 rounded-full text-[10px] text-red-300 font-semibold animate-pulse">
+                        Shumë afër!
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-white font-bold text-lg truncate">{nextFestive.name}</h3>
+                  <div className="flex items-center gap-3 mt-1">
+                    <div className="flex items-center gap-1 text-slate-300 text-sm">
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>{nextFestive.date} {months[nextFestive.month]}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Countdown */}
+                <div className="text-right">
+                  <div className={`text-3xl font-black bg-gradient-to-r ${nextFestive.color} bg-clip-text text-transparent`}>
+                    {nextFestive.daysUntil}
+                  </div>
+                  <div className="text-xs text-slate-400">
+                    {nextFestive.daysUntil === 1 ? 'ditë' : 'ditë'}
+                  </div>
+                </div>
+                
+                {/* Expand indicator */}
+                <ChevronRight className={`w-5 h-5 text-slate-500 transition-transform duration-300 ${showAllFestive ? 'rotate-90' : ''}`} />
+              </div>
+              
+              {/* Suggestion text */}
+              <div className="mt-3 pt-3 border-t border-slate-800/50">
+                <p className="text-xs text-slate-400 flex items-center gap-2">
+                  <Sparkles className="w-3 h-3 text-yellow-400" />
+                  Planifiko një takim special për {nextFestive.name}! Kliko për më shumë data.
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Expandable list of upcoming dates */}
+          {showAllFestive && (
+            <div className="mt-3 space-y-2 animate-fadeIn">
+              <div className="flex items-center gap-2 mb-2">
+                <Clock className="w-4 h-4 text-purple-400" />
+                <span className="text-sm font-semibold text-white">Datat e ardhshme festive</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {upcomingFestiveDates.slice(1, 7).map((festive, index) => (
+                  <div 
+                    key={index}
+                    className={`flex items-center gap-3 p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-slate-600 transition-all`}
+                  >
+                    <span className="text-xl">{festive.emoji}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-medium text-sm truncate">{festive.name}</p>
+                      <p className="text-slate-400 text-xs">{festive.date} {months[festive.month]}</p>
+                    </div>
+                    <div className={`px-2 py-1 rounded-lg bg-gradient-to-r ${festive.color} bg-opacity-20`}>
+                      <span className="text-xs font-bold text-white">{festive.daysUntil}d</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Current Country Display */}
       <div className="mb-4 p-3 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-xl">
