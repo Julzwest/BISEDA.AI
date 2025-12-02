@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import nodemailer from 'nodemailer';
+import mongoose from 'mongoose';
 import { getUser, saveUser } from './models/User.js';
 import stripeRoutes from './routes/stripe.js';
 import businessRoutes from './routes/businesses.js';
@@ -22,6 +23,31 @@ dotenv.config({ path: join(__dirname, '../.env') }); // Also check root
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// MongoDB Connection
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://thehiddenclinic_db_user:Biseda2024Atlas@biseda-cluster.litn98m.mongodb.net/biseda?retryWrites=true&w=majority';
+
+mongoose.connect(MONGODB_URI)
+  .then(() => console.log('✅ Connected to MongoDB Atlas'))
+  .catch(err => console.error('❌ MongoDB connection error:', err.message));
+
+// MongoDB User Schema
+const userAccountSchema = new mongoose.Schema({
+  odId: { type: String, required: true, unique: true },
+  username: { type: String, required: true },
+  email: { type: String, required: true },
+  password: { type: String },
+  phoneNumber: { type: String },
+  country: { type: String, default: 'AL' },
+  appleId: { type: String },
+  googleId: { type: String },
+  isVerified: { type: Boolean, default: false },
+  isBlocked: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
+  lastLogin: { type: Date, default: Date.now }
+});
+
+const UserAccountModel = mongoose.model('UserAccount', userAccountSchema);
 
 // Middleware
 app.use(cors({
@@ -602,42 +628,33 @@ app.post('/api/transcribe', rateLimit, async (req, res) => {
 // USER AUTHENTICATION ENDPOINTS
 // ==========================================
 
-// User accounts storage with file persistence
-const userAccounts = new Map();
-const USER_DATA_FILE = join(__dirname, 'data', 'users.json');
+// In-memory cache for quick lookups (backed by MongoDB)
+const userAccountsCache = new Map();
 
-// Ensure data directory exists
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
-const dataDir = join(__dirname, 'data');
-if (!existsSync(dataDir)) {
-  mkdirSync(dataDir, { recursive: true });
-}
-
-// Load users from file on startup
-function loadUsersFromFile() {
+// Helper: Get all users from MongoDB
+async function getAllUsersFromDB() {
   try {
-    if (existsSync(USER_DATA_FILE)) {
-      const data = JSON.parse(readFileSync(USER_DATA_FILE, 'utf8'));
-      data.forEach(user => userAccounts.set(user.userId, user));
-      console.log(`📂 Loaded ${userAccounts.size} users from file`);
-    }
+    return await UserAccountModel.find({}).lean();
   } catch (error) {
-    console.error('Error loading users:', error.message);
+    console.error('Error fetching users from DB:', error.message);
+    return [];
   }
 }
 
-// Save users to file
-function saveUsersToFile() {
+// Helper: Find user by email or username
+async function findUserByEmailOrUsername(email, username) {
   try {
-    const users = Array.from(userAccounts.values());
-    writeFileSync(USER_DATA_FILE, JSON.stringify(users, null, 2));
+    return await UserAccountModel.findOne({
+      $or: [
+        { email: email },
+        { username: { $regex: new RegExp(`^${username}$`, 'i') } }
+      ]
+    }).lean();
   } catch (error) {
-    console.error('Error saving users:', error.message);
+    console.error('Error finding user:', error.message);
+    return null;
   }
 }
-
-// Load users on startup
-loadUsersFromFile();
 
 // User registration endpoint
 app.post('/api/auth/register', async (req, res) => {
@@ -651,10 +668,10 @@ app.post('/api/auth/register', async (req, res) => {
       });
     }
     
-    // Check if user already exists
-    const existingUser = Array.from(userAccounts.values()).find(
-      u => u.email === email || u.username === username
-    );
+    // Check if user already exists in MongoDB
+    const existingUser = await UserAccountModel.findOne({
+      $or: [{ email: email }, { username: username }]
+    });
     
     if (existingUser) {
       return res.status(409).json({ 
@@ -663,27 +680,23 @@ app.post('/api/auth/register', async (req, res) => {
     }
     
     // Create new user account
-    const userId = appleId || `user-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-    const userAccount = {
-      userId,
+    const odId = appleId || `user-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    const newUser = new UserAccountModel({
+      odId,
       username: username || `user_${Date.now()}`,
       email,
       phoneNumber: phoneNumber || null,
       password: password || null, // In production, hash this!
       appleId: appleId || null,
-      createdAt: new Date().toISOString(),
-      lastLogin: new Date().toISOString(),
-      isVerified: appleId ? true : false, // Apple users are auto-verified
-      country: country || 'AL'
-    };
+      country: country || 'AL',
+      isVerified: appleId ? true : false
+    });
     
-    userAccounts.set(userId, userAccount);
-    
-    // Save to file for persistence
-    saveUsersToFile();
+    // Save to MongoDB
+    await newUser.save();
     
     // Also create user subscription profile
-    const user = getUser(userId);
+    const user = getUser(odId);
     saveUser(user);
     
     console.log(`✅ New user registered: ${username} (${email})`);
@@ -691,12 +704,12 @@ app.post('/api/auth/register', async (req, res) => {
     res.json({
       success: true,
       user: {
-        userId,
-        username: userAccount.username,
-        email: userAccount.email,
-        phoneNumber: userAccount.phoneNumber,
-        createdAt: userAccount.createdAt,
-        country: userAccount.country
+        odId,
+        username: newUser.username,
+        email: newUser.email,
+        phoneNumber: newUser.phoneNumber,
+        createdAt: newUser.createdAt,
+        country: newUser.country
       },
       message: 'Registration successful'
     });
@@ -716,10 +729,10 @@ app.post('/api/auth/login', async (req, res) => {
     const { email, password, appleId, identifier } = req.body;
     const loginIdentifier = (identifier || email || '').trim();
     
-    // Find user by email, username, or Apple ID
+    // Find user in MongoDB
     let userAccount;
     if (appleId) {
-      userAccount = Array.from(userAccounts.values()).find(u => u.appleId === appleId);
+      userAccount = await UserAccountModel.findOne({ appleId: appleId });
     } else {
       if (!loginIdentifier || !password) {
         return res.status(400).json({ 
@@ -731,12 +744,12 @@ app.post('/api/auth/login', async (req, res) => {
       const isEmail = loginIdentifier.includes('@');
       
       if (isEmail) {
-        userAccount = Array.from(userAccounts.values()).find(u => u.email === loginIdentifier);
+        userAccount = await UserAccountModel.findOne({ email: loginIdentifier });
       } else {
         // Search by username (case insensitive)
-        userAccount = Array.from(userAccounts.values()).find(
-          u => u.username && u.username.toLowerCase() === loginIdentifier.toLowerCase()
-        );
+        userAccount = await UserAccountModel.findOne({
+          username: { $regex: new RegExp(`^${loginIdentifier}$`, 'i') }
+        });
       }
       
       // Verify password
@@ -753,16 +766,18 @@ app.post('/api/auth/login', async (req, res) => {
       });
     }
     
-    // Update last login
-    userAccount.lastLogin = new Date().toISOString();
-    userAccounts.set(userAccount.userId, userAccount);
+    // Update last login in MongoDB
+    await UserAccountModel.updateOne(
+      { _id: userAccount._id },
+      { lastLogin: new Date() }
+    );
     
     console.log(`✅ User logged in: ${userAccount.username}`);
     
     res.json({
       success: true,
       user: {
-        userId: userAccount.userId,
+        odId: userAccount.odId,
         username: userAccount.username,
         email: userAccount.email,
         phoneNumber: userAccount.phoneNumber,
@@ -877,8 +892,8 @@ app.post('/api/auth/forgot-password', async (req, res) => {
       return res.status(400).json({ error: 'Email është i detyrueshëm' });
     }
     
-    // Find user by email
-    const userAccount = Array.from(userAccounts.values()).find(u => u.email === email);
+    // Find user by email in MongoDB
+    const userAccount = await UserAccountModel.findOne({ email: email });
     
     if (!userAccount) {
       // Don't reveal if email exists or not for security
@@ -896,7 +911,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     passwordResetCodes.set(email, {
       code: resetCode,
       expiresAt,
-      userId: userAccount.userId
+      odId: userAccount.odId
     });
     
     // Try to send email
@@ -980,19 +995,18 @@ app.post('/api/auth/reset-password', async (req, res) => {
       return res.status(400).json({ error: 'Kodi i gabuar' });
     }
     
-    // Find and update user password
-    const userAccount = Array.from(userAccounts.values()).find(u => u.email === email);
+    // Find and update user password in MongoDB
+    const userAccount = await UserAccountModel.findOne({ email: email });
     
     if (!userAccount) {
       return res.status(404).json({ error: 'Përdoruesi nuk u gjet' });
     }
     
-    // Update password (in production, hash this!)
-    userAccount.password = newPassword;
-    userAccounts.set(userAccount.userId, userAccount);
-    
-    // Save to file for persistence
-    saveUsersToFile();
+    // Update password in MongoDB (in production, hash this!)
+    await UserAccountModel.updateOne(
+      { email: email },
+      { password: newPassword }
+    );
     
     // Remove used reset code
     passwordResetCodes.delete(email);
