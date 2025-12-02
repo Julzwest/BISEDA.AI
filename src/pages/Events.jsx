@@ -75,6 +75,8 @@ export default function Events() {
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
   const [eventType, setEventType] = useState('all');
   const [showAllFestive, setShowAllFestive] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(5); // Show 5 initially
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Listen for country changes from the global CountrySwitcher
   useEffect(() => {
@@ -158,6 +160,7 @@ export default function Events() {
     
     setIsLoadingEvents(true);
     setLocalEvents([]);
+    setVisibleCount(5); // Reset visible count on new search
 
     try {
       const cityNameEn = getCityNameEn(userCountry, selectedCity);
@@ -429,10 +432,14 @@ export default function Events() {
           </div>
 
           <div className="space-y-3">
-            {localEvents.map((venue) => (
+            {localEvents.slice(0, visibleCount).map((venue, index) => (
               <Card
                 key={venue.id}
                 className="bg-gradient-to-br from-yellow-500/20 via-orange-500/20 to-red-500/20 border-2 border-yellow-500/30 backdrop-blur-sm hover:scale-[1.02] transition-all"
+                style={{ 
+                  animationDelay: `${index * 50}ms`,
+                  animation: 'fadeInUp 0.3s ease-out forwards'
+                }}
               >
                 <div className="p-4">
                   <div className="flex items-start gap-3">
@@ -480,6 +487,46 @@ export default function Events() {
               </Card>
             ))}
           </div>
+
+          {/* Load More Button */}
+          {localEvents.length > visibleCount && (
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => {
+                  setIsLoadingMore(true);
+                  setTimeout(() => {
+                    setVisibleCount(prev => prev + 5);
+                    setIsLoadingMore(false);
+                  }, 300);
+                }}
+                disabled={isLoadingMore}
+                className="group relative px-8 py-3 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 hover:from-yellow-500/30 hover:to-orange-500/30 border-2 border-yellow-500/50 hover:border-yellow-400 rounded-2xl text-yellow-300 font-bold transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-yellow-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span className="flex items-center gap-2">
+                  {isLoadingMore ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-yellow-300 border-t-transparent rounded-full animate-spin" />
+                      Duke ngarkuar...
+                    </>
+                  ) : (
+                    <>
+                      <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                      Shiko më shumë ({localEvents.length - visibleCount} të tjera)
+                    </>
+                  )}
+                </span>
+                {/* Glow effect */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-yellow-500/0 via-yellow-500/10 to-yellow-500/0 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
+            </div>
+          )}
+
+          {/* Show count indicator */}
+          {localEvents.length > 0 && (
+            <p className="text-center text-slate-500 text-sm mt-4">
+              Duke shfaqur {Math.min(visibleCount, localEvents.length)} nga {localEvents.length} vende
+            </p>
+          )}
         </div>
       )}
 
