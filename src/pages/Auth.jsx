@@ -1,35 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Mail, Lock, User, Phone, Eye, EyeOff, Sparkles, MapPin, ArrowLeft, KeyRound, UserX } from 'lucide-react';
+import { MessageSquare, Mail, Lock, User, Phone, Eye, EyeOff, Sparkles, MapPin, ArrowLeft, KeyRound, UserX, AlertTriangle } from 'lucide-react';
 import { getBackendUrl } from '@/utils/getBackendUrl';
 import countries from '@/config/countries';
 import { Capacitor } from '@capacitor/core';
+import { 
+  getDeviceFingerprint, 
+  getGuestUsage, 
+  incrementGuestUsage, 
+  isGuestLimitReached,
+  getGuestMessagesRemaining,
+  MAX_FREE_MESSAGES 
+} from '@/utils/deviceFingerprint';
 
-// Generate unique guest number (1-99999)
-const generateGuestNumber = () => {
-  // Get or create a counter in localStorage
-  let counter = parseInt(localStorage.getItem('guestCounter') || '0', 10);
-  counter = (counter % 99999) + 1; // Keep between 1-99999
-  localStorage.setItem('guestCounter', counter.toString());
-  return counter;
-};
-
-// Generate unique guest ID with number
-const generateGuestId = () => {
-  const guestNumber = generateGuestNumber();
-  return `guest_${guestNumber}_${Date.now().toString(36)}`;
-};
-
-// Guest mode utilities - No time limit, no screenshot limit
-export const initGuestSession = () => {
-  // Check if guest already has an ID (returning guest)
+// Guest mode utilities - Device-tracked usage limits
+export const initGuestSession = async () => {
+  // Get device fingerprint for tracking
+  const fingerprint = await getDeviceFingerprint();
+  const usage = await getGuestUsage();
+  
+  // Check if guest already has an ID (returning guest with same device)
   let guestId = localStorage.getItem('guestId');
   let guestNumber = localStorage.getItem('guestNumber');
   
-  if (!guestId) {
-    guestNumber = generateGuestNumber().toString();
-    guestId = `guest_${guestNumber}_${Date.now().toString(36)}`;
+  // If no guestId or different fingerprint, use fingerprint-based ID
+  if (!guestId || !guestId.includes(fingerprint.slice(0, 8))) {
+    guestNumber = usage.messageCount > 0 ? 'Kthyer' : '1';
+    guestId = `guest_${fingerprint.slice(0, 8)}_${Date.now().toString(36)}`;
     localStorage.setItem('guestId', guestId);
     localStorage.setItem('guestNumber', guestNumber);
   }
@@ -38,18 +36,25 @@ export const initGuestSession = () => {
     isGuest: true,
     guestId: guestId,
     guestNumber: guestNumber,
+    fingerprint: fingerprint,
     startTime: Date.now(),
-    // No expiration - guests can use indefinitely
-    expiresAt: null,
-    // Unlimited screenshots
-    screenshotCredits: Infinity,
-    usedCredits: 0
+    messageCount: usage.messageCount,
+    limitReached: usage.limitReached,
+    maxMessages: MAX_FREE_MESSAGES
   };
+  
   localStorage.setItem('guestSession', JSON.stringify(guestSession));
   localStorage.setItem('isAuthenticated', 'true');
   localStorage.setItem('isGuest', 'true');
   localStorage.setItem('userId', guestId);
-  localStorage.setItem('userName', `Vizitor #${guestNumber}`);
+  localStorage.setItem('deviceFingerprint', fingerprint);
+  
+  // Show different name for returning vs new guests
+  const displayName = usage.messageCount > 0 
+    ? `Vizitor (${usage.messageCount}/${MAX_FREE_MESSAGES} mesazhe)`
+    : `Vizitor (${MAX_FREE_MESSAGES} mesazhe falas)`;
+  localStorage.setItem('userName', displayName);
+  
   return guestSession;
 };
 
@@ -62,32 +67,53 @@ export const getGuestSession = () => {
   }
 };
 
-export const isGuestSessionValid = () => {
+export const isGuestSessionValid = async () => {
   const session = getGuestSession();
   if (!session) return false;
-  // Always valid since no time limit
-  return true;
+  
+  // Check if device limit is reached
+  const limitReached = await isGuestLimitReached();
+  return !limitReached;
 };
 
 export const getGuestTimeRemaining = () => {
-  // No time limit - return a large number
-  return Infinity;
+  return Infinity; // No time limit
 };
 
-export const getGuestCreditsRemaining = () => {
-  // Unlimited credits
-  return Infinity;
+export const getGuestCreditsRemaining = async () => {
+  return await getGuestMessagesRemaining();
 };
 
-export const useGuestCredit = () => {
-  // Always allow - no limit
+export const useGuestCredit = async () => {
+  const limitReached = await isGuestLimitReached();
+  if (limitReached) return false;
+  
+  await incrementGuestUsage();
+  
+  // Update session in localStorage
+  const session = getGuestSession();
+  if (session) {
+    const usage = await getGuestUsage();
+    session.messageCount = usage.messageCount;
+    session.limitReached = usage.limitReached;
+    localStorage.setItem('guestSession', JSON.stringify(session));
+    
+    // Update display name with current usage
+    const displayName = `Vizitor (${usage.messageCount}/${MAX_FREE_MESSAGES} mesazhe)`;
+    localStorage.setItem('userName', displayName);
+  }
+  
   return true;
 };
 
 export const clearGuestSession = () => {
+  // Only clear session, NOT the device fingerprint or usage data
+  // This ensures the device is still tracked even after "logout"
   localStorage.removeItem('guestSession');
   localStorage.removeItem('isGuest');
   localStorage.removeItem('isAuthenticated');
+  localStorage.removeItem('guestId');
+  // Keep deviceFingerprint and usage data to track the device
 };
 
 export default function Auth({ onAuthSuccess }) {
@@ -104,6 +130,11 @@ export default function Auth({ onAuthSuccess }) {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   
+  // Guest mode device tracking
+  const [guestLimitReached, setGuestLimitReached] = useState(false);
+  const [guestLoading, setGuestLoading] = useState(false);
+  const [guestMessagesRemaining, setGuestMessagesRemaining] = useState(MAX_FREE_MESSAGES);
+  
   // Forgot password state
   const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
   const [resetStep, setResetStep] = useState(1); // 1: enter email, 2: enter code, 3: new password
@@ -113,6 +144,22 @@ export default function Auth({ onAuthSuccess }) {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const backendUrl = getBackendUrl();
+  
+  // Check guest limit on mount
+  useEffect(() => {
+    const checkGuestLimit = async () => {
+      try {
+        const limitReached = await isGuestLimitReached();
+        setGuestLimitReached(limitReached);
+        
+        const remaining = await getGuestMessagesRemaining();
+        setGuestMessagesRemaining(remaining);
+      } catch (err) {
+        console.log('Error checking guest limit:', err);
+      }
+    };
+    checkGuestLimit();
+  }, []);
 
   const sanitizeFormData = () => {
     const trimmedUsername = formData.username?.trim() || '';
@@ -923,29 +970,83 @@ export default function Auth({ onAuthSuccess }) {
           <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-600 to-transparent"></div>
         </div>
 
+        {/* Guest Limit Warning */}
+        {guestLimitReached && (
+          <div className="mb-4 p-4 bg-amber-500/10 border border-amber-500/50 rounded-2xl">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-6 h-6 text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-amber-300 font-bold mb-1">Limiti i Vizitorit u Arrit!</h3>
+                <p className="text-amber-200/80 text-sm">
+                  Ke përdorur {MAX_FREE_MESSAGES} mesazhet falas. Krijo një llogari ose blej një plan për të vazhduar.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Guest Mode Button - Styled as proper button */}
         <Button
           type="button"
-          onClick={() => {
-            initGuestSession();
-            if (onAuthSuccess) {
-              onAuthSuccess({ 
-                isGuest: true, 
-                username: 'Vizitor'
-              });
+          disabled={guestLimitReached || guestLoading}
+          onClick={async () => {
+            setGuestLoading(true);
+            try {
+              // Check if device limit is reached
+              const limitReached = await isGuestLimitReached();
+              if (limitReached) {
+                setGuestLimitReached(true);
+                setError('Ke përdorur të gjitha mesazhet falas. Krijo një llogari për të vazhduar!');
+                return;
+              }
+              
+              const session = await initGuestSession();
+              if (onAuthSuccess) {
+                onAuthSuccess({ 
+                  isGuest: true, 
+                  username: session.guestNumber === 'Kthyer' ? 'Vizitor (Kthyer)' : 'Vizitor',
+                  messageCount: session.messageCount,
+                  maxMessages: session.maxMessages
+                });
+              }
+            } catch (err) {
+              console.error('Guest init error:', err);
+            } finally {
+              setGuestLoading(false);
             }
           }}
-          className="w-full py-6 rounded-2xl font-bold text-lg bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 hover:from-cyan-500 hover:via-blue-500 hover:to-indigo-500 text-white shadow-xl shadow-blue-500/30 hover:shadow-blue-500/50 hover:scale-[1.02] active:scale-95 transition-all duration-200"
+          className={`w-full py-6 rounded-2xl font-bold text-lg transition-all duration-200 ${
+            guestLimitReached
+              ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
+              : 'bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 hover:from-cyan-500 hover:via-blue-500 hover:to-indigo-500 text-white shadow-xl shadow-blue-500/30 hover:shadow-blue-500/50 hover:scale-[1.02] active:scale-95'
+          }`}
         >
           <div className="flex items-center justify-center gap-3">
-            <UserX className="w-6 h-6" />
-            <span>Vazhdo si Vizitor</span>
+            {guestLoading ? (
+              <>
+                <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>Duke kontrolluar...</span>
+              </>
+            ) : guestLimitReached ? (
+              <>
+                <AlertTriangle className="w-6 h-6" />
+                <span>Limiti i Arrit - Regjistrohu</span>
+              </>
+            ) : (
+              <>
+                <UserX className="w-6 h-6" />
+                <span>Vazhdo si Vizitor ({MAX_FREE_MESSAGES} mesazhe falas)</span>
+              </>
+            )}
           </div>
         </Button>
         
         {/* Guest Mode Info */}
         <p className="text-xs text-slate-400 text-center mt-3">
-          Eksploro aplikacionin pa llogari
+          {guestLimitReached 
+            ? 'Krijo një llogari për akses të pakufizuar'
+            : `Provo ${MAX_FREE_MESSAGES} mesazhe falas pa llogari`
+          }
         </p>
 
         {/* Additional Info */}

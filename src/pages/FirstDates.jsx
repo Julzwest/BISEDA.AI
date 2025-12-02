@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Coffee, UtensilsCrossed, Film, Music, Dumbbell, Palette, TreePine, Sparkles, Heart, Star, Crown, TrendingUp, Globe } from 'lucide-react';
+import { MapPin, Coffee, UtensilsCrossed, Film, Music, Dumbbell, Palette, TreePine, Sparkles, Heart, Star, Crown, TrendingUp, Globe, X, Search, Plus, ChevronRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { SaveButton } from '@/components/SaveButton';
@@ -15,6 +15,11 @@ export default function FirstDates() {
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  
+  // City selection modal
+  const [showCityModal, setShowCityModal] = useState(false);
+  const [customCityInput, setCustomCityInput] = useState('');
+  const [showMoreCities, setShowMoreCities] = useState(false);
   
   // Get user's country from localStorage
   const userCountry = localStorage.getItem('userCountry') || 'AL';
@@ -259,18 +264,24 @@ export default function FirstDates() {
       
       try {
         // Get English names for Google Places API
-      const cityNameEn = getCityNameEn(userCountry, city);
-      const countryNameEn = currentCountry?.nameEn || 'Albania';
+        const cityNameEn = getCityNameEn(userCountry, city) || city;
+        const countryNameEn = currentCountry?.nameEn || 'Albania';
+        const locationQuery = `${cityNameEn}, ${countryNameEn}`;
+        
+        console.log(`🔍 Searching in: ${locationQuery}`);
       
-      const placesResponse = await fetch(`${backendUrl}/api/places/search`, {
+        const placesResponse = await fetch(`${backendUrl}/api/places/search`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            query: categoryNames[category.id] || category.name,
-            location: `${cityNameEn}, ${countryNameEn}`,
-            category: category.id
+            query: `${categoryNames[category.id] || category.name} in ${cityNameEn}`,
+            location: locationQuery,
+            category: category.id,
+            strictLocation: true,
+            cityName: cityNameEn,
+            countryName: countryNameEn
           })
         });
         
@@ -279,7 +290,23 @@ export default function FirstDates() {
           
           if (data.source === 'google-places' && data.places && data.places.length > 0) {
             console.log(`✅ Got ${data.places.length} results from Google Places`);
-            googlePlaces = data.places;
+            
+            // Filter results to only include venues that contain the city name in their address
+            const filteredPlaces = data.places.filter(place => {
+              const address = (place.location || '').toLowerCase();
+              const cityLower = cityNameEn.toLowerCase();
+              const selectedCityLower = city.toLowerCase();
+              
+              // Check if the address contains the city name
+              return address.includes(cityLower) || 
+                     address.includes(selectedCityLower) ||
+                     // Also check for common Albanian city name variations
+                     address.includes(cityLower.replace('ë', 'e')) ||
+                     address.includes(selectedCityLower.replace('ë', 'e'));
+            });
+            
+            // Use filtered results if available, otherwise use all results
+            googlePlaces = filteredPlaces.length > 0 ? filteredPlaces : data.places;
             
             // Filter out already shown businesses if loading more
             if (isLoadMore) {
@@ -432,7 +459,8 @@ Mos shtoni tekst tjetër, VETËM JSON.`;
           <span className="text-xs text-slate-500 ml-auto">{currentCountry?.flag} {currentCountry?.name}</span>
         </div>
         <div className="flex flex-wrap gap-2">
-          {cities.slice(0, 15).map((city) => (
+          {/* Show first 12 cities, or all if showMoreCities */}
+          {cities.slice(0, showMoreCities ? cities.length : 12).map((city) => (
             <button
               key={city}
               onClick={() => handleCitySelect(city)}
@@ -445,21 +473,168 @@ Mos shtoni tekst tjetër, VETËM JSON.`;
               {city}
             </button>
           ))}
-          {/* Can't find your city button */}
+          
+          {/* Show More Cities button */}
+          {cities.length > 12 && !showMoreCities && (
+            <button
+              onClick={() => setShowMoreCities(true)}
+              className="px-4 py-2.5 rounded-xl font-semibold text-sm transition-all bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 border border-slate-600/50 flex items-center gap-1.5"
+            >
+              <ChevronRight className="w-4 h-4" />
+              <span>+{cities.length - 12} të tjera</span>
+            </button>
+          )}
+          
+          {/* Open city modal button */}
           <button
-            onClick={() => {
-              const cityName = prompt('Shkruaj emrin e qytetit tënd:');
-              if (cityName && cityName.trim()) {
-                handleCitySelect(cityName.trim());
-              }
-            }}
+            onClick={() => setShowCityModal(true)}
             className="px-4 py-2.5 rounded-xl font-semibold text-sm transition-all bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-400 border border-cyan-500/30 hover:border-cyan-400/50 hover:bg-cyan-500/30 flex items-center gap-1.5"
           >
-            <span>+</span>
+            <Plus className="w-4 h-4" />
             <span>Tjetër qytet</span>
           </button>
         </div>
+        
+        {/* Selected custom city indicator */}
+        {selectedCity && !cities.includes(selectedCity) && (
+          <div className="mt-3 flex items-center gap-2">
+            <span className="text-sm text-slate-400">Qyteti i zgjedhur:</span>
+            <span className="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-sm font-semibold">
+              {selectedCity}
+            </span>
+            <button
+              onClick={() => setSelectedCity('')}
+              className="p-1 text-slate-400 hover:text-white"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
+      
+      {/* City Selection Modal */}
+      {showCityModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-slate-900 rounded-3xl border border-slate-700 shadow-2xl overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-5 border-b border-slate-700">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-purple-400" />
+                  Zgjidh Qytetin
+                </h3>
+                <button
+                  onClick={() => setShowCityModal(false)}
+                  className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-all"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              {/* Search Input */}
+              <div className="mt-4 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                <input
+                  type="text"
+                  value={customCityInput}
+                  onChange={(e) => setCustomCityInput(e.target.value)}
+                  placeholder="Kërko ose shkruaj qytetin..."
+                  className="w-full pl-10 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                  style={{ fontSize: '16px' }}
+                  autoFocus
+                />
+              </div>
+            </div>
+            
+            {/* City List */}
+            <div className="p-4 max-h-[50vh] overflow-y-auto">
+              {/* If user typed something, show it as an option to select */}
+              {customCityInput.trim() && !cities.some(c => c.toLowerCase() === customCityInput.toLowerCase()) && (
+                <button
+                  onClick={() => {
+                    handleCitySelect(customCityInput.trim());
+                    setShowCityModal(false);
+                    setCustomCityInput('');
+                  }}
+                  className="w-full p-3 mb-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/40 rounded-xl text-left hover:from-purple-500/30 hover:to-pink-500/30 transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                      <Plus className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold">"{customCityInput.trim()}"</p>
+                      <p className="text-purple-300 text-sm">Kërko në këtë qytet</p>
+                    </div>
+                  </div>
+                </button>
+              )}
+              
+              {/* Filter cities based on input */}
+              <div className="space-y-2">
+                {cities
+                  .filter(city => 
+                    !customCityInput || 
+                    city.toLowerCase().includes(customCityInput.toLowerCase())
+                  )
+                  .map((city) => (
+                    <button
+                      key={city}
+                      onClick={() => {
+                        handleCitySelect(city);
+                        setShowCityModal(false);
+                        setCustomCityInput('');
+                      }}
+                      className={`w-full p-3 rounded-xl text-left transition-all ${
+                        selectedCity === city
+                          ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/40'
+                          : 'bg-slate-800/50 border border-slate-700/50 hover:border-purple-500/30 hover:bg-slate-800'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                          selectedCity === city
+                            ? 'bg-gradient-to-br from-purple-500 to-pink-500'
+                            : 'bg-slate-700'
+                        }`}>
+                          <MapPin className={`w-5 h-5 ${selectedCity === city ? 'text-white' : 'text-slate-400'}`} />
+                        </div>
+                        <div>
+                          <p className={`font-semibold ${selectedCity === city ? 'text-purple-300' : 'text-white'}`}>{city}</p>
+                          <p className="text-slate-500 text-sm">{currentCountry?.name}</p>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+              </div>
+              
+              {/* No results message */}
+              {customCityInput && !cities.some(c => c.toLowerCase().includes(customCityInput.toLowerCase())) && (
+                <p className="text-center text-slate-400 text-sm mt-4">
+                  Qyteti "{customCityInput}" nuk u gjet në listë, por mund ta kërkosh direkt.
+                </p>
+              )}
+            </div>
+            
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-700 bg-slate-800/50">
+              <Button
+                onClick={() => {
+                  if (customCityInput.trim()) {
+                    handleCitySelect(customCityInput.trim());
+                  }
+                  setShowCityModal(false);
+                  setCustomCityInput('');
+                }}
+                disabled={!customCityInput.trim() && !selectedCity}
+                className="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl"
+              >
+                {customCityInput.trim() ? `Kërko në "${customCityInput.trim()}"` : 'Mbyll'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Category Selection */}
       <div className="mb-6">
