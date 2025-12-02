@@ -59,26 +59,18 @@ export default function CountrySwitcher() {
 
   return (
     <>
-      {/* Floating Button */}
+      {/* Floating Button - Top Right next to Profile */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed left-4 top-1/2 -translate-y-1/2 z-[9997] group"
+        className="fixed right-16 top-4 z-[9998] group"
         aria-label="Change country"
       >
         <div className="relative">
-          {/* Glow effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-2xl blur-lg opacity-50 group-hover:opacity-80 transition-opacity" />
-          
-          {/* Button */}
-          <div className="relative flex items-center gap-2 px-3 py-2.5 bg-slate-900/90 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl group-hover:border-cyan-500/50 transition-all duration-300 group-hover:scale-105">
-            <span className="text-2xl transform group-hover:scale-110 transition-transform">
+          {/* Button - Compact circle design */}
+          <div className="relative w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg group-hover:shadow-cyan-500/50 group-hover:scale-110 transition-all duration-300">
+            <span className="text-lg">
               {currentCountry?.flag}
             </span>
-            <div className="hidden sm:flex flex-col items-start">
-              <span className="text-[10px] text-slate-400 uppercase tracking-wider">Vendndodhja</span>
-              <span className="text-sm font-semibold text-white">{currentCountry?.name}</span>
-            </div>
-            <Globe className="w-4 h-4 text-cyan-400 animate-pulse" />
           </div>
         </div>
       </button>
