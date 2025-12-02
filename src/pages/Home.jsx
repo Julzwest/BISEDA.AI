@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
-import { Lightbulb, TrendingUp, Zap, Star, Sparkles, Heart, Clipboard, MessageSquare, Calendar, Bot, Flag, Gift, PartyPopper } from 'lucide-react';
+import { Lightbulb, TrendingUp, Zap, Star, Sparkles, Heart, MessageSquare, Calendar, Bot, Gift, PartyPopper } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import UsageDisplay from '@/components/UsageDisplay';
@@ -21,17 +21,10 @@ export default function Home() {
 
   const features = [
     {
-      icon: Clipboard,
-      title: 'Biseda Chat',
-      description: 'Kopjo mesazh nga WhatsApp, Instagram, Messenger, Tinder dhe merr përgjigje të sugjeruara',
-      color: 'from-purple-500 to-pink-500',
-      page: 'Clipboard'
-    },
-    {
       icon: Bot,
       title: 'AI Coach',
       description: 'Bisedo me AI për të praktikuar biseda, mësuar teknikat e picking up, dhe përmirësuar aftësitë e tua',
-      color: 'from-blue-500 to-cyan-500',
+      color: 'from-purple-500 to-pink-500',
       page: 'Chat'
     },
     {
@@ -59,7 +52,7 @@ export default function Home() {
       icon: Gift,
       title: 'Sugjerime Dhuratash',
       description: 'Gjej dhuratën perfekte bazuar në interesat e partnerit me lidhje për blerje',
-      color: 'from-pink-500 to-rose-500',
+      color: 'from-rose-500 to-red-500',
       page: 'Gifts'
     }
   ];

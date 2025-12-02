@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from './utils';
-import { Lightbulb, Home, Calendar, Bot, Flag, User, PartyPopper } from 'lucide-react';
+import { Lightbulb, Home, Calendar, Bot, Flag, User, PartyPopper, Sparkles, MessageCircle, Heart, MapPin } from 'lucide-react';
 import CountrySwitcher from '@/components/CountrySwitcher';
 import GuestBanner from '@/components/GuestBanner';
 import ThemeSwitcher from '@/components/ThemeSwitcher';
@@ -14,17 +14,19 @@ export default function Layout({ children, onLogout }) {
   const location = useLocation();
   const { themeConfig, isDark } = useTheme();
   const currentPageName = location.pathname.split('/')[1]?.charAt(0).toUpperCase() + location.pathname.split('/')[1]?.slice(1) || 'Home';
+  const isGuest = localStorage.getItem('isGuest') === 'true';
 
   // Track page views
   useEffect(() => {
     trackPageView(currentPageName);
   }, [currentPageName]);
 
+  // Modern nav items with updated icons
   const navItems = [
     { name: 'Home', icon: Home, page: 'Home' },
-    { name: 'AI Coach', icon: Bot, page: 'Chat' },
-    { name: 'Takime', icon: Calendar, page: 'FirstDates' },
-    { name: 'Evente', icon: PartyPopper, page: 'Events' },
+    { name: 'AI Coach', icon: Sparkles, page: 'Chat' },
+    { name: 'Takime', icon: Heart, page: 'FirstDates' },
+    { name: 'Evente', icon: MapPin, page: 'Events' },
     { name: 'Këshilla', icon: Lightbulb, page: 'Tips' }
   ];
 
@@ -40,10 +42,6 @@ export default function Layout({ children, onLogout }) {
           -webkit-tap-highlight-color: transparent;
         }
         
-        .nav-active {
-          color: #fbbf24;
-        }
-        
         /* Cover the entire bottom area including home indicator */
         .bottom-safe-area {
           position: fixed;
@@ -54,53 +52,109 @@ export default function Layout({ children, onLogout }) {
           background: #0f172a;
           z-index: 9998;
         }
+        
+        /* Modern nav styling */
+        .nav-item {
+          position: relative;
+          transition: all 0.2s ease;
+        }
+        
+        .nav-item.active {
+          color: #a855f7;
+        }
+        
+        .nav-item.active::before {
+          content: '';
+          position: absolute;
+          top: -4px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 24px;
+          height: 3px;
+          background: linear-gradient(90deg, #a855f7, #ec4899);
+          border-radius: 0 0 4px 4px;
+        }
+        
+        .nav-item:not(.active):hover {
+          color: #c084fc;
+        }
+        
+        .nav-icon {
+          transition: transform 0.2s ease;
+        }
+        
+        .nav-item.active .nav-icon {
+          transform: scale(1.15);
+        }
       `}</style>
       
       {/* Cover for safe area at bottom */}
       <div className="bottom-safe-area"></div>
       
-      {/* Guest Mode Banner */}
-      <GuestBanner 
-        onExpired={() => {
-          clearGuestSession();
-          if (onLogout) onLogout();
+      {/* Fixed Top Header Bar */}
+      <header 
+        style={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          right: 0, 
+          height: '60px',
+          zIndex: 9999,
+          background: 'linear-gradient(to bottom, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.95))',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(148, 163, 184, 0.1)'
         }}
-        onSignUp={() => {
-          clearGuestSession();
-          if (onLogout) onLogout();
-        }}
-      />
-      
-      {/* Country Switcher - Floating on left side */}
-      <CountrySwitcher />
-      
-      {/* Top Bar with Theme Switcher and User Profile Link */}
-      <div style={{ position: 'fixed', top: '16px', right: '16px', zIndex: 9999 }} className="flex items-center gap-2">
-        <ThemeSwitcher />
-        <Link to="/profile">
-          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg hover:scale-105 hover:shadow-purple-500/30 transition-all duration-200">
-            <User className="w-5 h-5 text-white" />
+      >
+        <div className="h-full px-4 flex items-center justify-between max-w-screen-xl mx-auto">
+          {/* Left side - Country Switcher */}
+          <div className="flex items-center">
+            <CountrySwitcher />
           </div>
-        </Link>
-      </div>
+          
+          {/* Center - Guest Banner (if guest) */}
+          {isGuest && (
+            <GuestBanner 
+              onExpired={() => {
+                clearGuestSession();
+                if (onLogout) onLogout();
+              }}
+              onSignUp={() => {
+                clearGuestSession();
+                if (onLogout) onLogout();
+              }}
+            />
+          )}
+          
+          {/* Right side - Theme Switcher & Profile */}
+          <div className="flex items-center gap-2">
+            <ThemeSwitcher />
+            <Link to="/profile">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg hover:scale-105 hover:shadow-purple-500/30 transition-all duration-200">
+                <User className="w-5 h-5 text-white" />
+              </div>
+            </Link>
+          </div>
+        </div>
+      </header>
       
-      {/* Main Content - Normal flow, no restrictions */}
-      <div style={{ paddingBottom: '90px' }}>
+      {/* Main Content - with top padding for fixed header */}
+      <div style={{ paddingTop: '60px', paddingBottom: '90px' }}>
         {children}
       </div>
 
-      {/* Fixed Bottom Navigation */}
+      {/* Fixed Bottom Navigation - Modern Design */}
       <nav style={{ 
         position: 'fixed', 
         bottom: 0, 
         left: 0, 
         right: 0, 
-        backgroundColor: '#0f172a',
+        background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.95))',
+        backdropFilter: 'blur(12px)',
         borderTop: '1px solid rgba(148, 163, 184, 0.1)',
         zIndex: 9999,
         paddingBottom: 'env(safe-area-inset-bottom, 0px)'
       }}>
-        <div className={`flex ${navItems.length === 4 ? 'justify-between' : 'justify-around'} items-center h-full px-3`}>
+        <div className="flex justify-around items-center h-16 px-2 max-w-screen-xl mx-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentPageName === item.page;
@@ -108,12 +162,16 @@ export default function Layout({ children, onLogout }) {
               <Link
                 key={item.page}
                 to={createPageUrl(item.page)}
-                className={`flex flex-col items-center justify-center w-full h-full transition-colors ${
-                  isActive ? 'nav-active' : 'text-slate-300'
+                className={`nav-item flex flex-col items-center justify-center py-2 px-3 rounded-xl ${
+                  isActive ? 'active text-purple-400' : 'text-slate-400'
                 }`}
               >
-                <Icon className={`w-7 h-7 mb-1 ${isActive ? 'scale-110' : ''} transition-transform`} />
-                <span className="text-sm font-bold leading-tight whitespace-nowrap">{item.name}</span>
+                <div className={`nav-icon p-2 rounded-xl ${isActive ? 'bg-purple-500/20' : ''}`}>
+                  <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} />
+                </div>
+                <span className={`text-xs font-semibold mt-0.5 ${isActive ? 'text-purple-300' : 'text-slate-500'}`}>
+                  {item.name}
+                </span>
               </Link>
             );
           })}

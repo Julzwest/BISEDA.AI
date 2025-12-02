@@ -23,12 +23,14 @@ function App() {
   const [isGuest, setIsGuest] = useState(false);
 
   useEffect(() => {
-    // Check if user is already authenticated
+    // Check if user is already authenticated (persistent login)
     const authStatus = localStorage.getItem('isAuthenticated');
     const userId = localStorage.getItem('userId');
+    const guestId = localStorage.getItem('guestId');
     const guestStatus = localStorage.getItem('isGuest');
     
-    if (authStatus === 'true' && (userId || guestStatus === 'true')) {
+    // User stays logged in - check for valid session
+    if (authStatus === 'true' && (userId || guestId)) {
       setIsAuthenticated(true);
       setIsGuest(guestStatus === 'true');
       

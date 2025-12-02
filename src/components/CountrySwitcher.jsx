@@ -59,13 +59,13 @@ export default function CountrySwitcher() {
 
   return (
     <>
-      {/* Modern Dropdown Button - Top Right */}
+      {/* Modern Dropdown Button - Inline for header */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed right-20 top-4 z-[9998] group"
+        className="group"
         aria-label="Change country"
       >
-        <div className="flex items-center gap-1.5 px-3 py-2 bg-slate-800/90 backdrop-blur-xl border border-slate-700/60 rounded-xl hover:bg-slate-700/90 hover:border-cyan-500/50 transition-all duration-200 shadow-lg">
+        <div className="flex items-center gap-1.5 px-3 py-2 bg-slate-800/90 border border-slate-700/60 rounded-xl hover:bg-slate-700/90 hover:border-cyan-500/50 transition-all duration-200">
           <span className="text-lg">{currentCountry?.flag}</span>
           <svg className="w-3.5 h-3.5 text-slate-400 group-hover:text-cyan-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />

@@ -6,10 +6,23 @@ import { getBackendUrl } from '@/utils/getBackendUrl';
 import countries from '@/config/countries';
 import { Capacitor } from '@capacitor/core';
 
+// Generate unique guest ID
+const generateGuestId = () => {
+  return 'guest_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+};
+
 // Guest mode utilities - No time limit, no screenshot limit
 export const initGuestSession = () => {
+  // Check if guest already has an ID (returning guest)
+  let guestId = localStorage.getItem('guestId');
+  if (!guestId) {
+    guestId = generateGuestId();
+    localStorage.setItem('guestId', guestId);
+  }
+  
   const guestSession = {
     isGuest: true,
+    guestId: guestId,
     startTime: Date.now(),
     // No expiration - guests can use indefinitely
     expiresAt: null,
@@ -20,6 +33,8 @@ export const initGuestSession = () => {
   localStorage.setItem('guestSession', JSON.stringify(guestSession));
   localStorage.setItem('isAuthenticated', 'true');
   localStorage.setItem('isGuest', 'true');
+  localStorage.setItem('userId', guestId);
+  localStorage.setItem('userName', 'Vizitor');
   return guestSession;
 };
 
