@@ -804,6 +804,136 @@ app.post('/api/auth/apple', async (req, res) => {
   }
 });
 
+// Google Sign In endpoint
+app.post('/api/auth/google', async (req, res) => {
+  try {
+    const { idToken, email, givenName, familyName, imageUrl } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+    
+    // Generate a unique Google user ID
+    const googleUserId = `google_${Buffer.from(email).toString('base64').substring(0, 20)}`;
+    
+    // Check if user already exists with this Google ID or email
+    let userAccount = Array.from(userAccounts.values()).find(u => u.googleId === googleUserId || u.email === email);
+    
+    if (userAccount) {
+      // Existing user - update last login
+      userAccount.lastLogin = new Date().toISOString();
+      if (!userAccount.googleId) {
+        userAccount.googleId = googleUserId;
+      }
+      console.log(`✅ Google user logged in: ${userAccount.userId}`);
+    } else {
+      // New user - create account
+      const userId = generateUserId();
+      const username = givenName ? `${givenName}${familyName || ''}`.replace(/\s/g, '') : `GoogleUser_${Date.now()}`;
+      
+      userAccount = {
+        userId,
+        username,
+        email: email,
+        googleId: googleUserId,
+        imageUrl: imageUrl || null,
+        phoneNumber: null,
+        passwordHash: null, // No password for Google users
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString(),
+        subscriptionTier: 'free',
+        savedItems: { dates: [], gifts: [], tips: [] }
+      };
+      
+      userAccounts.set(userId, userAccount);
+      initializeUserData(userId);
+      console.log(`✅ New Google user created: ${userId}`);
+    }
+    
+    res.json({
+      message: 'Google Sign In successful',
+      user: {
+        userId: userAccount.userId,
+        username: userAccount.username,
+        email: userAccount.email,
+        isGoogleUser: true
+      }
+    });
+    
+  } catch (error) {
+    console.error('Google Sign In error:', error);
+    res.status(500).json({ 
+      error: 'Google Sign In failed',
+      message: error.message 
+    });
+  }
+});
+
+// Facebook Sign In endpoint
+app.post('/api/auth/facebook', async (req, res) => {
+  try {
+    const { accessToken, userId: fbUserId, email, name, firstName, lastName } = req.body;
+    
+    if (!accessToken && !fbUserId) {
+      return res.status(400).json({ error: 'Access token or user ID is required' });
+    }
+    
+    // Generate a unique Facebook user ID
+    const facebookUserId = `facebook_${fbUserId || Buffer.from(email || 'unknown').toString('base64').substring(0, 20)}`;
+    
+    // Check if user already exists with this Facebook ID or email
+    let userAccount = Array.from(userAccounts.values()).find(u => u.facebookId === facebookUserId || (email && u.email === email));
+    
+    if (userAccount) {
+      // Existing user - update last login
+      userAccount.lastLogin = new Date().toISOString();
+      if (!userAccount.facebookId) {
+        userAccount.facebookId = facebookUserId;
+      }
+      console.log(`✅ Facebook user logged in: ${userAccount.userId}`);
+    } else {
+      // New user - create account
+      const newUserId = generateUserId();
+      const username = firstName ? `${firstName}${lastName || ''}`.replace(/\s/g, '') : (name ? name.replace(/\s/g, '') : `FacebookUser_${Date.now()}`);
+      const userEmail = email || `${facebookUserId}@facebook.com`;
+      
+      userAccount = {
+        userId: newUserId,
+        username,
+        email: userEmail,
+        facebookId: facebookUserId,
+        phoneNumber: null,
+        passwordHash: null, // No password for Facebook users
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString(),
+        subscriptionTier: 'free',
+        savedItems: { dates: [], gifts: [], tips: [] }
+      };
+      
+      userAccounts.set(newUserId, userAccount);
+      initializeUserData(newUserId);
+      console.log(`✅ New Facebook user created: ${newUserId}`);
+    }
+    
+    res.json({
+      message: 'Facebook Sign In successful',
+      user: {
+        userId: userAccount.userId,
+        username: userAccount.username,
+        email: userAccount.email,
+        isFacebookUser: true
+      }
+    });
+    
+  } catch (error) {
+    console.error('Facebook Sign In error:', error);
+    res.status(500).json({ 
+      error: 'Facebook Sign In failed',
+      message: error.message 
+    });
+  }
+});
+
 // Get current user info
 app.get('/api/auth/me', (req, res) => {
   try {

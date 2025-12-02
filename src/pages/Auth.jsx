@@ -1,10 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Mail, Lock, User, Phone, Eye, EyeOff, Apple, Sparkles, Globe } from 'lucide-react';
+import { MessageSquare, Mail, Lock, User, Phone, Eye, EyeOff, Apple, Sparkles, Globe, Chrome } from 'lucide-react';
 import { getBackendUrl } from '@/utils/getBackendUrl';
 import { countries } from '@/config/countries';
 import { Capacitor } from '@capacitor/core';
+
+// Facebook icon component
+const FacebookIcon = ({ className }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+  </svg>
+);
+
+// Google icon component  
+const GoogleIcon = ({ className }) => (
+  <svg className={className} viewBox="0 0 24 24">
+    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+  </svg>
+);
 
 export default function Auth({ onAuthSuccess }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -212,6 +229,128 @@ export default function Auth({ onAuthSuccess }) {
     }
   };
 
+  // Google Sign In Handler
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setLoading(true);
+
+    try {
+      // For native iOS app - use Capacitor Google Auth
+      if (isNativeApp) {
+        try {
+          const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
+          
+          console.log('🔵 Starting native Google Sign In...');
+          
+          const result = await GoogleAuth.signIn();
+          console.log('✅ Google Sign In result:', result);
+          
+          // Send to backend
+          const response = await fetch(`${backendUrl}/api/auth/google`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              idToken: result.authentication?.idToken,
+              email: result.email,
+              givenName: result.givenName,
+              familyName: result.familyName,
+              imageUrl: result.imageUrl
+            })
+          });
+
+          const data = await response.json();
+          
+          if (response.ok) {
+            localStorage.setItem('userId', data.user.userId);
+            localStorage.setItem('userEmail', data.user.email);
+            localStorage.setItem('userName', data.user.username);
+            localStorage.setItem('isAuthenticated', 'true');
+            if (onAuthSuccess) onAuthSuccess(data.user);
+          } else {
+            setError(data.error || 'Google Sign In dështoi');
+          }
+        } catch (nativeErr) {
+          console.error('Native Google Sign In error:', nativeErr);
+          setError('Google Sign In nuk është konfiguruar. Përdorni email.');
+        }
+      } 
+      // For web - show message (requires Google OAuth setup)
+      else {
+        setError('🔵 Google Sign In kërkon konfigurim. Përdorni email më poshtë.');
+      }
+    } catch (err) {
+      console.error('Google Sign In error:', err);
+      setError('Google Sign In dështoi. Provoni me email/fjalëkalim.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Facebook Sign In Handler
+  const handleFacebookSignIn = async () => {
+    setError('');
+    setLoading(true);
+
+    try {
+      // For native iOS app - use Capacitor Facebook Login
+      if (isNativeApp) {
+        try {
+          const { FacebookLogin } = await import('@capacitor-community/facebook-login');
+          
+          console.log('🔵 Starting native Facebook Sign In...');
+          
+          const result = await FacebookLogin.login({ permissions: ['email', 'public_profile'] });
+          console.log('✅ Facebook Sign In result:', result);
+          
+          if (result.accessToken) {
+            // Get user profile from Facebook
+            const profileResponse = await FacebookLogin.getProfile({ fields: ['email', 'name', 'first_name', 'last_name'] });
+            
+            // Send to backend
+            const response = await fetch(`${backendUrl}/api/auth/facebook`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                accessToken: result.accessToken.token,
+                userId: result.accessToken.userId,
+                email: profileResponse.email,
+                name: profileResponse.name,
+                firstName: profileResponse.first_name,
+                lastName: profileResponse.last_name
+              })
+            });
+
+            const data = await response.json();
+            
+            if (response.ok) {
+              localStorage.setItem('userId', data.user.userId);
+              localStorage.setItem('userEmail', data.user.email);
+              localStorage.setItem('userName', data.user.username);
+              localStorage.setItem('isAuthenticated', 'true');
+              if (onAuthSuccess) onAuthSuccess(data.user);
+            } else {
+              setError(data.error || 'Facebook Sign In dështoi');
+            }
+          } else {
+            setError('Facebook Sign In u anulua.');
+          }
+        } catch (nativeErr) {
+          console.error('Native Facebook Sign In error:', nativeErr);
+          setError('Facebook Sign In nuk është konfiguruar. Përdorni email.');
+        }
+      } 
+      // For web - show message (requires Facebook OAuth setup)
+      else {
+        setError('📘 Facebook Sign In kërkon konfigurim. Përdorni email më poshtë.');
+      }
+    } catch (err) {
+      console.error('Facebook Sign In error:', err);
+      setError('Facebook Sign In dështoi. Provoni me email/fjalëkalim.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="p-6 py-12 bg-gradient-to-b from-slate-950 via-purple-950/20 to-slate-950">
       <div className="w-full max-w-md mx-auto">
@@ -264,15 +403,38 @@ export default function Auth({ onAuthSuccess }) {
             </button>
           </div>
 
-          {/* Sign in with Apple Button */}
-          <Button
-            onClick={handleAppleSignIn}
-            disabled={loading}
-            className="w-full bg-black hover:bg-gray-900 text-white font-semibold h-12 mb-4 flex items-center justify-center gap-2"
-          >
-            <Apple className="w-5 h-5" fill="currentColor" />
-            <span>Vazhdo me Apple</span>
-          </Button>
+          {/* Social Sign-in Buttons */}
+          <div className="space-y-3 mb-4">
+            {/* Sign in with Apple */}
+            <Button
+              onClick={handleAppleSignIn}
+              disabled={loading}
+              className="w-full bg-black hover:bg-gray-900 text-white font-semibold h-12 flex items-center justify-center gap-2"
+            >
+              <Apple className="w-5 h-5" fill="currentColor" />
+              <span>Vazhdo me Apple</span>
+            </Button>
+
+            {/* Sign in with Google */}
+            <Button
+              onClick={handleGoogleSignIn}
+              disabled={loading}
+              className="w-full bg-white hover:bg-gray-100 text-gray-800 font-semibold h-12 flex items-center justify-center gap-2 border border-gray-300"
+            >
+              <GoogleIcon className="w-5 h-5" />
+              <span>Vazhdo me Google</span>
+            </Button>
+
+            {/* Sign in with Facebook */}
+            <Button
+              onClick={handleFacebookSignIn}
+              disabled={loading}
+              className="w-full bg-[#1877F2] hover:bg-[#166FE5] text-white font-semibold h-12 flex items-center justify-center gap-2"
+            >
+              <FacebookIcon className="w-5 h-5" />
+              <span>Vazhdo me Facebook</span>
+            </Button>
+          </div>
 
           {/* Divider */}
           <div className="flex items-center gap-3 my-6">
