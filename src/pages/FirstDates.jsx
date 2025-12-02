@@ -424,39 +424,40 @@ Mos shtoni tekst tjetër, VETËM JSON.`;
         <p className="text-slate-400 text-sm">Gjej ide perfekte për takimin e parë</p>
       </div>
 
-      {/* Current Country Display */}
-      <div className="mb-4 p-3 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-xl">
-        <div className="flex items-center gap-2">
-          <Globe className="w-4 h-4 text-cyan-400" />
-          <span className="text-cyan-300 text-sm font-medium">
-            Vendndodhja: {currentCountry?.flag} {currentCountry?.name}
-          </span>
-          <a href="#/profile" className="ml-auto text-xs text-cyan-400 hover:text-cyan-300 underline">
-            Ndrysho
-          </a>
-        </div>
-      </div>
-
-      {/* City Selection */}
+      {/* City Selection - Modern Design */}
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-3">
           <MapPin className="w-5 h-5 text-purple-400" />
           <h2 className="text-lg font-bold text-white">Zgjidh Qytetin</h2>
+          <span className="text-xs text-slate-500 ml-auto">{currentCountry?.flag} {currentCountry?.name}</span>
         </div>
         <div className="flex flex-wrap gap-2">
-          {cities.map((city) => (
+          {cities.slice(0, 15).map((city) => (
             <button
               key={city}
               onClick={() => handleCitySelect(city)}
-              className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
+              className={`px-4 py-2.5 rounded-xl font-semibold text-sm transition-all ${
                 selectedCity === city
-                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/50 scale-105'
-                  : 'bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 border border-slate-700'
+                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/40'
+                  : 'bg-slate-800/70 text-slate-300 hover:bg-slate-700/70 border border-slate-700/50 hover:border-purple-500/50'
               }`}
             >
               {city}
             </button>
           ))}
+          {/* Can't find your city button */}
+          <button
+            onClick={() => {
+              const cityName = prompt('Shkruaj emrin e qytetit tënd:');
+              if (cityName && cityName.trim()) {
+                handleCitySelect(cityName.trim());
+              }
+            }}
+            className="px-4 py-2.5 rounded-xl font-semibold text-sm transition-all bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-400 border border-cyan-500/30 hover:border-cyan-400/50 hover:bg-cyan-500/30 flex items-center gap-1.5"
+          >
+            <span>+</span>
+            <span>Tjetër qytet</span>
+          </button>
         </div>
       </div>
 
@@ -553,7 +554,7 @@ Mos shtoni tekst tjetër, VETËM JSON.`;
             </h2>
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-pink-500 to-transparent"></div>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {suggestions.map((suggestion, index) => {
               const isFeatured = suggestion.featured;
               const isSponsored = suggestion.sponsored;
@@ -561,84 +562,95 @@ Mos shtoni tekst tjetër, VETËM JSON.`;
               return (
                 <Card
                   key={index}
-                  className={`group border-2 backdrop-blur-sm transition-all hover:scale-[1.02] ${
+                  className={`group overflow-hidden transition-all duration-300 hover:scale-[1.01] ${
                     isSponsored
-                      ? 'bg-gradient-to-br from-yellow-500/30 via-amber-500/30 to-orange-500/30 border-yellow-400/50 hover:border-yellow-300 hover:shadow-lg hover:shadow-yellow-500/40'
+                      ? 'bg-gradient-to-r from-amber-900/40 via-yellow-900/30 to-orange-900/40 border border-yellow-500/40 shadow-lg shadow-yellow-500/10'
                       : isFeatured
-                      ? 'bg-gradient-to-br from-pink-500/25 via-rose-500/25 to-red-500/25 border-pink-400/40 hover:border-pink-300 hover:shadow-lg hover:shadow-pink-500/30'
-                      : 'bg-gradient-to-br from-pink-500/20 via-rose-500/20 to-red-500/20 border-pink-500/30 hover:border-pink-400 hover:shadow-lg hover:shadow-pink-500/30'
+                      ? 'bg-gradient-to-r from-purple-900/40 via-pink-900/30 to-rose-900/40 border border-pink-500/40 shadow-lg shadow-pink-500/10'
+                      : 'bg-slate-800/60 border border-slate-700/50 hover:border-purple-500/40'
                   }`}
                 >
-                  <div className="p-5">
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-sm ${
-                        isSponsored
-                          ? 'bg-gradient-to-br from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50'
-                          : isFeatured
-                          ? 'bg-gradient-to-br from-pink-500 to-rose-500 shadow-lg shadow-pink-500/50'
-                          : 'bg-gradient-to-br from-pink-500 to-rose-500'
-                      }`}>
-                        {isSponsored ? <Crown className="w-5 h-5" /> : index + 1}
+                  <div className="p-4">
+                    {/* Top row with badges */}
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {isSponsored && (
+                          <span className="flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-yellow-500 to-amber-500 rounded-full text-xs font-bold text-slate-900">
+                            <Crown className="w-3.5 h-3.5" />
+                            Sponsorizuar
+                          </span>
+                        )}
+                        {isFeatured && !isSponsored && (
+                          <span className="flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-pink-500 to-rose-500 rounded-full text-xs font-bold text-white">
+                            <Star className="w-3.5 h-3.5 fill-white" />
+                            Top Pick
+                          </span>
+                        )}
+                        {suggestion.source === 'google' && (
+                          <span className="flex items-center gap-1 px-2.5 py-1 bg-blue-500/20 border border-blue-500/40 rounded-full text-xs font-semibold text-blue-300">
+                            ✓ Verified
+                          </span>
+                        )}
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <h3 className="text-white font-bold text-lg">{suggestion.name}</h3>
-                          {isSponsored && (
-                            <span className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-yellow-500 to-amber-500 rounded-lg text-xs font-bold text-slate-900">
-                              <TrendingUp className="w-3 h-3" />
-                              Sponsorizuar
-                            </span>
-                          )}
-                          {isFeatured && !isSponsored && (
-                            <span className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-pink-500 to-rose-500 rounded-lg text-xs font-bold text-white">
-                              <Star className="w-3 h-3 fill-white" />
-                              Featured
-                            </span>
-                          )}
-                          {suggestion.source === 'google' && (
-                            <span className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg text-xs font-bold text-white">
-                              <MapPin className="w-3 h-3" />
-                              Verified
-                            </span>
-                          )}
-                          {suggestion.rating && (
-                            <div className="flex items-center gap-1">
-                              <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                              <span className="text-xs text-slate-300">{suggestion.rating}</span>
-                            </div>
-                          )}
+                      {suggestion.rating && (
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-900/60 rounded-full">
+                          <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                          <span className="text-sm font-bold text-white">{suggestion.rating}</span>
                         </div>
-                        <p className="text-slate-300 text-sm mb-2">{suggestion.description}</p>
-                        <div className="flex items-center gap-2 flex-wrap">
+                      )}
+                    </div>
+
+                    {/* Main content */}
+                    <div className="flex items-start gap-4">
+                      {/* Number badge */}
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 text-white font-bold text-lg ${
+                        isSponsored
+                          ? 'bg-gradient-to-br from-yellow-500 to-orange-600'
+                          : isFeatured
+                          ? 'bg-gradient-to-br from-pink-500 to-rose-600'
+                          : 'bg-gradient-to-br from-purple-500 to-indigo-600'
+                      }`}>
+                        {isSponsored ? <Crown className="w-6 h-6" /> : index + 1}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-white font-bold text-lg mb-1 truncate">{suggestion.name}</h3>
+                        <p className="text-slate-400 text-sm mb-3 line-clamp-2">{suggestion.description}</p>
+                        
+                        {/* Meta info */}
+                        <div className="flex items-center gap-3 flex-wrap mb-3">
                           {suggestion.price && (
-                            <span className={`text-xs font-semibold px-2 py-1 rounded ${
+                            <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
                               suggestion.price === 'Gratis' 
-                                ? 'bg-green-500/20 text-green-300 border border-green-500/50'
+                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
                                 : suggestion.price === '$'
-                                ? 'bg-blue-500/20 text-blue-300 border border-blue-500/50'
+                                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40'
                                 : suggestion.price === '$$'
-                                ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/50'
-                                : 'bg-purple-500/20 text-purple-300 border border-purple-500/50'
+                                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                                : 'bg-purple-500/20 text-purple-400 border border-purple-500/40'
                             }`}>
                               {suggestion.price}
                             </span>
                           )}
                           {suggestion.location && (
-                            <span className="text-xs text-slate-400">
-                              📍 {suggestion.location}
+                            <span className="text-xs text-slate-500 flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />
+                              {suggestion.location}
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 mt-3 flex-wrap">
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-2 flex-wrap">
                           {suggestion.googleMapsLink && (
                             <a
                               href={suggestion.googleMapsLink}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 rounded-lg text-xs font-semibold text-blue-300 transition-all"
+                              className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40 rounded-xl text-xs font-bold text-blue-300 transition-all hover:scale-105"
                             >
-                              <MapPin className="w-3 h-3" />
-                              Shiko në Google Maps
+                              <MapPin className="w-3.5 h-3.5" />
+                              Google Maps
                             </a>
                           )}
                           <SaveButton 

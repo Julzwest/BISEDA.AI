@@ -1,12 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Sun, Moon, X } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 
 export default function ThemeSwitcher() {
   const { theme, changeTheme, isDark } = useTheme();
   const [showModal, setShowModal] = useState(false);
+  const modalRef = useRef(null);
 
   const ThemeIcon = isDark ? Moon : Sun;
+
+  // Close on outside click
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        setShowModal(false);
+      }
+    };
+
+    if (showModal) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.body.style.overflow = '';
+    };
+  }, [showModal]);
 
   return (
     <>
@@ -24,14 +44,14 @@ export default function ThemeSwitcher() {
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
           {/* Backdrop */}
           <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-md"
+            className="absolute inset-0 bg-black/70 backdrop-blur-md"
             onClick={() => setShowModal(false)}
           />
           
-          {/* Modal Content */}
+          {/* Modal Content - Centered */}
           <div 
+            ref={modalRef}
             className="relative w-full max-w-xs bg-slate-900 border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-slate-700/50">
