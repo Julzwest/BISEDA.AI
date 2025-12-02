@@ -59,19 +59,17 @@ export default function CountrySwitcher() {
 
   return (
     <>
-      {/* Floating Button - Top Right next to Profile */}
+      {/* Modern Dropdown Button - Top Right */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed right-16 top-4 z-[9998] group"
+        className="fixed right-20 top-4 z-[9998] group"
         aria-label="Change country"
       >
-        <div className="relative">
-          {/* Button - Compact circle design */}
-          <div className="relative w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg group-hover:shadow-cyan-500/50 group-hover:scale-110 transition-all duration-300">
-            <span className="text-lg">
-              {currentCountry?.flag}
-            </span>
-          </div>
+        <div className="flex items-center gap-1.5 px-3 py-2 bg-slate-800/90 backdrop-blur-xl border border-slate-700/60 rounded-xl hover:bg-slate-700/90 hover:border-cyan-500/50 transition-all duration-200 shadow-lg">
+          <span className="text-lg">{currentCountry?.flag}</span>
+          <svg className="w-3.5 h-3.5 text-slate-400 group-hover:text-cyan-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
         </div>
       </button>
 

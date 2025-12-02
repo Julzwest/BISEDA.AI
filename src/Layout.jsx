@@ -53,7 +53,7 @@ export default function Layout({ children, onLogout }) {
       {/* Top Bar with User Profile Link */}
       <div style={{ position: 'fixed', top: '16px', right: '16px', zIndex: 9999 }}>
         <Link to="/profile">
-          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
+          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg hover:scale-105 hover:shadow-purple-500/30 transition-all duration-200">
             <User className="w-5 h-5 text-white" />
           </div>
         </Link>
