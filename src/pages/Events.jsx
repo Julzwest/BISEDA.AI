@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Sparkles, MapPin, Star, Music, PartyPopper, Globe, ExternalLink, Search, Heart, Gift, Flag, ChevronRight, Clock, Bookmark, BookmarkCheck, Share2, Ticket, X, Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Calendar, Sparkles, MapPin, Star, Music, PartyPopper, Globe, ExternalLink, Search, Heart, Gift, Flag, ChevronRight, Clock, Bookmark, BookmarkCheck, Share2, Ticket, X, Plus, Dumbbell, UtensilsCrossed, Laugh, Film, Mountain, Palette, Flower2, Tent, HeartHandshake } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { countries, getCitiesForCountry, getCountryByCode, getCityNameEn } from '@/config/countries';
@@ -17,60 +18,236 @@ const additionalAlbanianCities = [
   'Sukth', 'Ura Vajgurore', 'Vau i Dejës', 'Velipojë', 'Xhafzotaj'
 ];
 
-// Festive dates data by country
+// Festive dates data by country - Comprehensive list
 const festiveDatesByCountry = {
+  // Albania - Full list of holidays and celebrations
   AL: [
     { month: 0, date: 1, name: 'Dita e Vitit të Ri', icon: Sparkles, color: 'from-blue-500 to-cyan-500', emoji: '🎆' },
+    { month: 0, date: 2, name: 'Dita e Dytë e Vitit të Ri', icon: Sparkles, color: 'from-blue-500 to-cyan-500', emoji: '🎊' },
     { month: 0, date: 11, name: 'Dita e Republikës', icon: Flag, color: 'from-red-500 to-orange-500', emoji: '🇦🇱' },
     { month: 1, date: 14, name: 'Dita e Dashurisë', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💕' },
     { month: 2, date: 7, name: 'Dita e Mësuesit', icon: Star, color: 'from-yellow-500 to-amber-500', emoji: '📚' },
+    { month: 2, date: 8, name: 'Dita Ndërkombëtare e Gruas', icon: Heart, color: 'from-purple-500 to-pink-500', emoji: '👩' },
     { month: 2, date: 14, name: 'Dita e Verës', icon: Sparkles, color: 'from-green-500 to-emerald-500', emoji: '🌸' },
     { month: 2, date: 22, name: 'Dita e Nevruzit', icon: Sparkles, color: 'from-purple-500 to-pink-500', emoji: '🌷' },
-    { month: 4, date: 1, name: 'Dita e Punëtorëve', icon: Star, color: 'from-red-500 to-orange-500', emoji: '✊' },
-    { month: 4, date: 5, name: 'Dita e Nënës', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💐' },
-    { month: 5, date: 1, name: 'Dita e Fëmijëve', icon: Gift, color: 'from-yellow-500 to-orange-500', emoji: '🎈' },
+    { month: 3, date: 1, name: 'Dita e Shakave (April Fools)', icon: Sparkles, color: 'from-yellow-500 to-orange-500', emoji: '🃏' },
+    { month: 4, date: 1, name: 'Dita Ndërkombëtare e Punëtorëve', icon: Star, color: 'from-red-500 to-orange-500', emoji: '✊' },
+    { month: 4, date: 5, name: 'Dita e Dëshmorëve', icon: Flag, color: 'from-red-500 to-black-500', emoji: '🎖️' },
+    { month: 4, date: 12, name: 'Dita e Nënës', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💐' },
+    { month: 5, date: 1, name: 'Dita Ndërkombëtare e Fëmijëve', icon: Gift, color: 'from-yellow-500 to-orange-500', emoji: '🎈' },
+    { month: 5, date: 16, name: 'Dita e Babait', icon: Heart, color: 'from-blue-500 to-cyan-500', emoji: '👨' },
+    { month: 5, date: 21, name: 'Dita e Muzikës', icon: Music, color: 'from-purple-500 to-pink-500', emoji: '🎵' },
+    { month: 8, date: 5, name: 'Dita e Nënë Terezës', icon: Heart, color: 'from-blue-500 to-white-500', emoji: '🙏' },
+    { month: 9, date: 19, name: 'Dita e Lumturisë së Nënë Terezës', icon: Heart, color: 'from-blue-500 to-white-500', emoji: '✨' },
+    { month: 9, date: 31, name: 'Halloween', icon: Sparkles, color: 'from-orange-500 to-purple-500', emoji: '🎃' },
     { month: 10, date: 28, name: 'Dita e Flamurit', icon: Flag, color: 'from-red-500 to-black-500', emoji: '🇦🇱' },
     { month: 10, date: 29, name: 'Dita e Çlirimit', icon: Flag, color: 'from-red-500 to-orange-500', emoji: '🎖️' },
+    { month: 11, date: 8, name: 'Dita e Rinisë', icon: Star, color: 'from-blue-500 to-cyan-500', emoji: '🎓' },
+    { month: 11, date: 24, name: 'Nata e Krishtlindjeve', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🌟' },
     { month: 11, date: 25, name: 'Krishtlindjet', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎄' },
+    { month: 11, date: 26, name: 'Dita e Dytë e Krishtlindjeve', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎁' },
     { month: 11, date: 31, name: 'Nata e Vitit të Ri', icon: Sparkles, color: 'from-purple-500 to-pink-500', emoji: '🎉' }
   ],
+  // Kosovo
   XK: [
     { month: 0, date: 1, name: 'Dita e Vitit të Ri', icon: Sparkles, color: 'from-blue-500 to-cyan-500', emoji: '🎆' },
+    { month: 0, date: 2, name: 'Dita e Dytë e Vitit të Ri', icon: Sparkles, color: 'from-blue-500 to-cyan-500', emoji: '🎊' },
     { month: 1, date: 14, name: 'Dita e Dashurisë', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💕' },
     { month: 1, date: 17, name: 'Dita e Pavarësisë', icon: Flag, color: 'from-blue-500 to-yellow-500', emoji: '🇽🇰' },
+    { month: 2, date: 8, name: 'Dita Ndërkombëtare e Gruas', icon: Heart, color: 'from-purple-500 to-pink-500', emoji: '👩' },
+    { month: 3, date: 9, name: 'Dita e Kushtetutës', icon: Flag, color: 'from-blue-500 to-yellow-500', emoji: '📜' },
+    { month: 4, date: 1, name: 'Dita e Punëtorëve', icon: Star, color: 'from-red-500 to-orange-500', emoji: '✊' },
+    { month: 4, date: 9, name: 'Dita e Evropës', icon: Flag, color: 'from-blue-500 to-yellow-500', emoji: '🇪🇺' },
+    { month: 5, date: 12, name: 'Dita e Çlirimit', icon: Flag, color: 'from-blue-500 to-yellow-500', emoji: '🎖️' },
+    { month: 9, date: 31, name: 'Halloween', icon: Sparkles, color: 'from-orange-500 to-purple-500', emoji: '🎃' },
+    { month: 10, date: 28, name: 'Dita e Flamurit', icon: Flag, color: 'from-red-500 to-black-500', emoji: '🇦🇱' },
+    { month: 11, date: 24, name: 'Nata e Krishtlindjeve', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🌟' },
     { month: 11, date: 25, name: 'Krishtlindjet', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎄' },
     { month: 11, date: 31, name: 'Nata e Vitit të Ri', icon: Sparkles, color: 'from-purple-500 to-pink-500', emoji: '🎉' }
   ],
+  // United Kingdom
   GB: [
     { month: 0, date: 1, name: 'New Year\'s Day', icon: Sparkles, color: 'from-blue-500 to-cyan-500', emoji: '🎆' },
+    { month: 0, date: 25, name: 'Burns Night (Scotland)', icon: Star, color: 'from-blue-500 to-white-500', emoji: '🏴󠁧󠁢󠁳󠁣󠁴󠁿' },
     { month: 1, date: 14, name: 'Valentine\'s Day', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💕' },
+    { month: 2, date: 1, name: 'St David\'s Day (Wales)', icon: Flag, color: 'from-green-500 to-white-500', emoji: '🏴󠁧󠁢󠁷󠁬󠁳󠁿' },
+    { month: 2, date: 17, name: 'St Patrick\'s Day', icon: Star, color: 'from-green-500 to-emerald-500', emoji: '☘️' },
+    { month: 3, date: 23, name: 'St George\'s Day (England)', icon: Flag, color: 'from-red-500 to-white-500', emoji: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
+    { month: 4, date: 5, name: 'May Day Bank Holiday', icon: Sparkles, color: 'from-green-500 to-emerald-500', emoji: '🌸' },
+    { month: 5, date: 16, name: 'Father\'s Day', icon: Heart, color: 'from-blue-500 to-cyan-500', emoji: '👨' },
+    { month: 9, date: 31, name: 'Halloween', icon: Sparkles, color: 'from-orange-500 to-purple-500', emoji: '🎃' },
     { month: 10, date: 5, name: 'Bonfire Night', icon: Sparkles, color: 'from-orange-500 to-red-500', emoji: '🎆' },
-    { month: 11, date: 25, name: 'Christmas', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎄' },
+    { month: 10, date: 11, name: 'Remembrance Day', icon: Heart, color: 'from-red-500 to-black-500', emoji: '🌺' },
+    { month: 10, date: 30, name: 'St Andrew\'s Day (Scotland)', icon: Flag, color: 'from-blue-500 to-white-500', emoji: '🏴󠁧󠁢󠁳󠁣󠁴󠁿' },
+    { month: 11, date: 24, name: 'Christmas Eve', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🌟' },
+    { month: 11, date: 25, name: 'Christmas Day', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎄' },
+    { month: 11, date: 26, name: 'Boxing Day', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎁' },
     { month: 11, date: 31, name: 'New Year\'s Eve', icon: Sparkles, color: 'from-purple-500 to-pink-500', emoji: '🎉' }
   ],
+  // Germany
   DE: [
     { month: 0, date: 1, name: 'Neujahr', icon: Sparkles, color: 'from-blue-500 to-cyan-500', emoji: '🎆' },
+    { month: 0, date: 6, name: 'Heilige Drei Könige', icon: Star, color: 'from-yellow-500 to-amber-500', emoji: '👑' },
     { month: 1, date: 14, name: 'Valentinstag', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💕' },
+    { month: 4, date: 1, name: 'Tag der Arbeit', icon: Star, color: 'from-red-500 to-orange-500', emoji: '✊' },
+    { month: 4, date: 12, name: 'Muttertag', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💐' },
     { month: 9, date: 3, name: 'Tag der Deutschen Einheit', icon: Flag, color: 'from-black-500 to-yellow-500', emoji: '🇩🇪' },
+    { month: 9, date: 31, name: 'Halloween', icon: Sparkles, color: 'from-orange-500 to-purple-500', emoji: '🎃' },
+    { month: 10, date: 11, name: 'St. Martin', icon: Star, color: 'from-orange-500 to-red-500', emoji: '🏮' },
+    { month: 11, date: 6, name: 'Nikolaustag', icon: Gift, color: 'from-red-500 to-white-500', emoji: '🎅' },
+    { month: 11, date: 24, name: 'Heiligabend', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🌟' },
     { month: 11, date: 25, name: 'Weihnachten', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎄' },
+    { month: 11, date: 26, name: 'Zweiter Weihnachtstag', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎁' },
     { month: 11, date: 31, name: 'Silvester', icon: Sparkles, color: 'from-purple-500 to-pink-500', emoji: '🎉' }
   ],
+  // United States
   US: [
     { month: 0, date: 1, name: 'New Year\'s Day', icon: Sparkles, color: 'from-blue-500 to-cyan-500', emoji: '🎆' },
+    { month: 0, date: 20, name: 'Martin Luther King Jr. Day', icon: Star, color: 'from-blue-500 to-red-500', emoji: '✊' },
+    { month: 1, date: 2, name: 'Groundhog Day', icon: Sparkles, color: 'from-amber-500 to-brown-500', emoji: '🦫' },
     { month: 1, date: 14, name: 'Valentine\'s Day', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💕' },
+    { month: 2, date: 17, name: 'St. Patrick\'s Day', icon: Star, color: 'from-green-500 to-emerald-500', emoji: '☘️' },
+    { month: 3, date: 1, name: 'April Fools\' Day', icon: Sparkles, color: 'from-yellow-500 to-orange-500', emoji: '🃏' },
+    { month: 4, date: 5, name: 'Cinco de Mayo', icon: Star, color: 'from-green-500 to-red-500', emoji: '🇲🇽' },
+    { month: 4, date: 12, name: 'Mother\'s Day', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💐' },
+    { month: 5, date: 16, name: 'Father\'s Day', icon: Heart, color: 'from-blue-500 to-cyan-500', emoji: '👨' },
     { month: 6, date: 4, name: 'Independence Day', icon: Flag, color: 'from-red-500 to-blue-500', emoji: '🇺🇸' },
     { month: 9, date: 31, name: 'Halloween', icon: Sparkles, color: 'from-orange-500 to-purple-500', emoji: '🎃' },
+    { month: 10, date: 11, name: 'Veterans Day', icon: Flag, color: 'from-red-500 to-blue-500', emoji: '🎖️' },
     { month: 10, date: 28, name: 'Thanksgiving', icon: Gift, color: 'from-orange-500 to-amber-500', emoji: '🦃' },
-    { month: 11, date: 25, name: 'Christmas', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎄' },
+    { month: 11, date: 24, name: 'Christmas Eve', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🌟' },
+    { month: 11, date: 25, name: 'Christmas Day', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎄' },
     { month: 11, date: 31, name: 'New Year\'s Eve', icon: Sparkles, color: 'from-purple-500 to-pink-500', emoji: '🎉' }
+  ],
+  // Italy
+  IT: [
+    { month: 0, date: 1, name: 'Capodanno', icon: Sparkles, color: 'from-blue-500 to-cyan-500', emoji: '🎆' },
+    { month: 0, date: 6, name: 'Epifania', icon: Star, color: 'from-yellow-500 to-amber-500', emoji: '👑' },
+    { month: 1, date: 14, name: 'San Valentino', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💕' },
+    { month: 2, date: 8, name: 'Festa della Donna', icon: Heart, color: 'from-yellow-500 to-orange-500', emoji: '🌼' },
+    { month: 3, date: 25, name: 'Festa della Liberazione', icon: Flag, color: 'from-green-500 to-red-500', emoji: '🇮🇹' },
+    { month: 4, date: 1, name: 'Festa dei Lavoratori', icon: Star, color: 'from-red-500 to-orange-500', emoji: '✊' },
+    { month: 4, date: 12, name: 'Festa della Mamma', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💐' },
+    { month: 5, date: 2, name: 'Festa della Repubblica', icon: Flag, color: 'from-green-500 to-red-500', emoji: '🇮🇹' },
+    { month: 7, date: 15, name: 'Ferragosto', icon: Sparkles, color: 'from-yellow-500 to-orange-500', emoji: '☀️' },
+    { month: 9, date: 31, name: 'Halloween', icon: Sparkles, color: 'from-orange-500 to-purple-500', emoji: '🎃' },
+    { month: 10, date: 1, name: 'Ognissanti', icon: Star, color: 'from-purple-500 to-white-500', emoji: '🕯️' },
+    { month: 11, date: 8, name: 'Immacolata Concezione', icon: Star, color: 'from-blue-500 to-white-500', emoji: '🙏' },
+    { month: 11, date: 24, name: 'Vigilia di Natale', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🌟' },
+    { month: 11, date: 25, name: 'Natale', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎄' },
+    { month: 11, date: 26, name: 'Santo Stefano', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎁' },
+    { month: 11, date: 31, name: 'San Silvestro', icon: Sparkles, color: 'from-purple-500 to-pink-500', emoji: '🎉' }
+  ],
+  // France
+  FR: [
+    { month: 0, date: 1, name: 'Jour de l\'An', icon: Sparkles, color: 'from-blue-500 to-cyan-500', emoji: '🎆' },
+    { month: 1, date: 14, name: 'Saint-Valentin', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💕' },
+    { month: 4, date: 1, name: 'Fête du Travail', icon: Star, color: 'from-red-500 to-orange-500', emoji: '✊' },
+    { month: 4, date: 8, name: 'Victoire 1945', icon: Flag, color: 'from-blue-500 to-red-500', emoji: '🇫🇷' },
+    { month: 5, date: 21, name: 'Fête de la Musique', icon: Music, color: 'from-purple-500 to-pink-500', emoji: '🎵' },
+    { month: 6, date: 14, name: 'Fête Nationale', icon: Flag, color: 'from-blue-500 to-red-500', emoji: '🇫🇷' },
+    { month: 9, date: 31, name: 'Halloween', icon: Sparkles, color: 'from-orange-500 to-purple-500', emoji: '🎃' },
+    { month: 10, date: 1, name: 'La Toussaint', icon: Star, color: 'from-purple-500 to-white-500', emoji: '🕯️' },
+    { month: 10, date: 11, name: 'Armistice', icon: Flag, color: 'from-blue-500 to-red-500', emoji: '🎖️' },
+    { month: 11, date: 24, name: 'Réveillon de Noël', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🌟' },
+    { month: 11, date: 25, name: 'Noël', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎄' },
+    { month: 11, date: 31, name: 'Saint-Sylvestre', icon: Sparkles, color: 'from-purple-500 to-pink-500', emoji: '🎉' }
+  ],
+  // Spain
+  ES: [
+    { month: 0, date: 1, name: 'Año Nuevo', icon: Sparkles, color: 'from-blue-500 to-cyan-500', emoji: '🎆' },
+    { month: 0, date: 6, name: 'Día de Reyes', icon: Gift, color: 'from-yellow-500 to-amber-500', emoji: '👑' },
+    { month: 1, date: 14, name: 'San Valentín', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💕' },
+    { month: 4, date: 1, name: 'Día del Trabajo', icon: Star, color: 'from-red-500 to-orange-500', emoji: '✊' },
+    { month: 4, date: 5, name: 'Día de la Madre', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💐' },
+    { month: 5, date: 24, name: 'San Juan', icon: Sparkles, color: 'from-orange-500 to-yellow-500', emoji: '🔥' },
+    { month: 9, date: 12, name: 'Fiesta Nacional de España', icon: Flag, color: 'from-red-500 to-yellow-500', emoji: '🇪🇸' },
+    { month: 9, date: 31, name: 'Halloween', icon: Sparkles, color: 'from-orange-500 to-purple-500', emoji: '🎃' },
+    { month: 10, date: 1, name: 'Día de Todos los Santos', icon: Star, color: 'from-purple-500 to-white-500', emoji: '🕯️' },
+    { month: 11, date: 6, name: 'Día de la Constitución', icon: Flag, color: 'from-red-500 to-yellow-500', emoji: '📜' },
+    { month: 11, date: 24, name: 'Nochebuena', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🌟' },
+    { month: 11, date: 25, name: 'Navidad', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎄' },
+    { month: 11, date: 31, name: 'Nochevieja', icon: Sparkles, color: 'from-purple-500 to-pink-500', emoji: '🎉' }
+  ],
+  // Greece
+  GR: [
+    { month: 0, date: 1, name: 'Πρωτοχρονιά', icon: Sparkles, color: 'from-blue-500 to-cyan-500', emoji: '🎆' },
+    { month: 0, date: 6, name: 'Θεοφάνεια', icon: Star, color: 'from-blue-500 to-white-500', emoji: '💧' },
+    { month: 1, date: 14, name: 'Αγίου Βαλεντίνου', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💕' },
+    { month: 2, date: 25, name: 'Εθνική Επέτειος', icon: Flag, color: 'from-blue-500 to-white-500', emoji: '🇬🇷' },
+    { month: 4, date: 1, name: 'Πρωτομαγιά', icon: Star, color: 'from-red-500 to-orange-500', emoji: '✊' },
+    { month: 9, date: 28, name: 'Επέτειος του Όχι', icon: Flag, color: 'from-blue-500 to-white-500', emoji: '🇬🇷' },
+    { month: 9, date: 31, name: 'Halloween', icon: Sparkles, color: 'from-orange-500 to-purple-500', emoji: '🎃' },
+    { month: 11, date: 24, name: 'Παραμονή Χριστουγέννων', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🌟' },
+    { month: 11, date: 25, name: 'Χριστούγεννα', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎄' },
+    { month: 11, date: 31, name: 'Παραμονή Πρωτοχρονιάς', icon: Sparkles, color: 'from-purple-500 to-pink-500', emoji: '🎉' }
+  ],
+  // Switzerland
+  CH: [
+    { month: 0, date: 1, name: 'Neujahr', icon: Sparkles, color: 'from-blue-500 to-cyan-500', emoji: '🎆' },
+    { month: 1, date: 14, name: 'Valentinstag', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💕' },
+    { month: 7, date: 1, name: 'Schweizer Nationalfeiertag', icon: Flag, color: 'from-red-500 to-white-500', emoji: '🇨🇭' },
+    { month: 9, date: 31, name: 'Halloween', icon: Sparkles, color: 'from-orange-500 to-purple-500', emoji: '🎃' },
+    { month: 11, date: 24, name: 'Heiligabend', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🌟' },
+    { month: 11, date: 25, name: 'Weihnachten', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎄' },
+    { month: 11, date: 26, name: 'Stephanstag', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎁' },
+    { month: 11, date: 31, name: 'Silvester', icon: Sparkles, color: 'from-purple-500 to-pink-500', emoji: '🎉' }
+  ],
+  // Austria
+  AT: [
+    { month: 0, date: 1, name: 'Neujahr', icon: Sparkles, color: 'from-blue-500 to-cyan-500', emoji: '🎆' },
+    { month: 0, date: 6, name: 'Heilige Drei Könige', icon: Star, color: 'from-yellow-500 to-amber-500', emoji: '👑' },
+    { month: 1, date: 14, name: 'Valentinstag', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💕' },
+    { month: 4, date: 1, name: 'Staatsfeiertag', icon: Star, color: 'from-red-500 to-orange-500', emoji: '✊' },
+    { month: 9, date: 26, name: 'Nationalfeiertag', icon: Flag, color: 'from-red-500 to-white-500', emoji: '🇦🇹' },
+    { month: 9, date: 31, name: 'Halloween', icon: Sparkles, color: 'from-orange-500 to-purple-500', emoji: '🎃' },
+    { month: 11, date: 24, name: 'Heiliger Abend', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🌟' },
+    { month: 11, date: 25, name: 'Weihnachten', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎄' },
+    { month: 11, date: 26, name: 'Stefanitag', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎁' },
+    { month: 11, date: 31, name: 'Silvester', icon: Sparkles, color: 'from-purple-500 to-pink-500', emoji: '🎉' }
+  ],
+  // North Macedonia
+  MK: [
+    { month: 0, date: 1, name: 'Nova Godina', icon: Sparkles, color: 'from-blue-500 to-cyan-500', emoji: '🎆' },
+    { month: 0, date: 7, name: 'Božik (Orthodox)', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎄' },
+    { month: 1, date: 14, name: 'Den na Vljubenite', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💕' },
+    { month: 4, date: 1, name: 'Den na Trudot', icon: Star, color: 'from-red-500 to-orange-500', emoji: '✊' },
+    { month: 4, date: 24, name: 'Sv. Kiril i Metodij', icon: Star, color: 'from-yellow-500 to-amber-500', emoji: '📜' },
+    { month: 7, date: 2, name: 'Den na Republikata', icon: Flag, color: 'from-red-500 to-yellow-500', emoji: '🇲🇰' },
+    { month: 8, date: 8, name: 'Den na Nezavisnosta', icon: Flag, color: 'from-red-500 to-yellow-500', emoji: '🇲🇰' },
+    { month: 9, date: 31, name: 'Halloween', icon: Sparkles, color: 'from-orange-500 to-purple-500', emoji: '🎃' },
+    { month: 11, date: 31, name: 'Nova Godina Eve', icon: Sparkles, color: 'from-purple-500 to-pink-500', emoji: '🎉' }
+  ],
+  // Montenegro
+  ME: [
+    { month: 0, date: 1, name: 'Nova Godina', icon: Sparkles, color: 'from-blue-500 to-cyan-500', emoji: '🎆' },
+    { month: 0, date: 7, name: 'Božić (Orthodox)', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎄' },
+    { month: 1, date: 14, name: 'Dan Zaljubljenih', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💕' },
+    { month: 4, date: 1, name: 'Praznik Rada', icon: Star, color: 'from-red-500 to-orange-500', emoji: '✊' },
+    { month: 4, date: 21, name: 'Dan Nezavisnosti', icon: Flag, color: 'from-red-500 to-gold-500', emoji: '🇲🇪' },
+    { month: 6, date: 13, name: 'Dan Državnosti', icon: Flag, color: 'from-red-500 to-gold-500', emoji: '🇲🇪' },
+    { month: 9, date: 31, name: 'Halloween', icon: Sparkles, color: 'from-orange-500 to-purple-500', emoji: '🎃' },
+    { month: 11, date: 31, name: 'Doček Nove Godine', icon: Sparkles, color: 'from-purple-500 to-pink-500', emoji: '🎉' }
   ]
 };
 
 // Default festive dates for countries not specifically defined
 const defaultFestiveDates = [
   { month: 0, date: 1, name: 'Dita e Vitit të Ri', icon: Sparkles, color: 'from-blue-500 to-cyan-500', emoji: '🎆' },
+  { month: 0, date: 6, name: 'Epifania / Tre Mbretërit', icon: Star, color: 'from-yellow-500 to-amber-500', emoji: '👑' },
   { month: 1, date: 14, name: 'Dita e Dashurisë', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💕' },
+  { month: 2, date: 8, name: 'Dita Ndërkombëtare e Gruas', icon: Heart, color: 'from-purple-500 to-pink-500', emoji: '👩' },
+  { month: 3, date: 1, name: 'Dita e Shakave', icon: Sparkles, color: 'from-yellow-500 to-orange-500', emoji: '🃏' },
+  { month: 4, date: 1, name: 'Dita e Punëtorëve', icon: Star, color: 'from-red-500 to-orange-500', emoji: '✊' },
+  { month: 4, date: 12, name: 'Dita e Nënës', icon: Heart, color: 'from-pink-500 to-rose-500', emoji: '💐' },
+  { month: 5, date: 1, name: 'Dita e Fëmijëve', icon: Gift, color: 'from-yellow-500 to-orange-500', emoji: '🎈' },
+  { month: 5, date: 16, name: 'Dita e Babait', icon: Heart, color: 'from-blue-500 to-cyan-500', emoji: '👨' },
+  { month: 5, date: 21, name: 'Dita e Muzikës', icon: Music, color: 'from-purple-500 to-pink-500', emoji: '🎵' },
+  { month: 9, date: 31, name: 'Halloween', icon: Sparkles, color: 'from-orange-500 to-purple-500', emoji: '🎃' },
+  { month: 10, date: 1, name: 'Dita e të Gjithë Shenjtorëve', icon: Star, color: 'from-purple-500 to-white-500', emoji: '🕯️' },
+  { month: 11, date: 24, name: 'Nata e Krishtlindjeve', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🌟' },
   { month: 11, date: 25, name: 'Krishtlindjet', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎄' },
+  { month: 11, date: 26, name: 'Dita e Dytë e Krishtlindjeve', icon: Gift, color: 'from-green-500 to-red-500', emoji: '🎁' },
   { month: 11, date: 31, name: 'Nata e Vitit të Ri', icon: Sparkles, color: 'from-purple-500 to-pink-500', emoji: '🎉' }
 ];
 
@@ -155,20 +332,47 @@ export default function Events() {
     { id: 'all', name: 'Të gjitha', icon: PartyPopper },
     { id: 'music', name: 'Muzikë', icon: Music },
     { id: 'nightlife', name: 'Jetë Nate', icon: Sparkles },
-    { id: 'culture', name: 'Kulturë', icon: Calendar }
+    { id: 'culture', name: 'Kulturë', icon: Calendar },
+    { id: 'sports', name: 'Sport', icon: Dumbbell },
+    { id: 'food', name: 'Gastronomi', icon: UtensilsCrossed },
+    { id: 'comedy', name: 'Komedi', icon: Laugh },
+    { id: 'cinema', name: 'Kinema', icon: Film },
+    { id: 'outdoor', name: 'Aventurë', icon: Mountain },
+    { id: 'art', name: 'Art', icon: Palette },
+    { id: 'wellness', name: 'Wellness', icon: Flower2 },
+    { id: 'festivals', name: 'Festivale', icon: Tent },
+    { id: 'romantic', name: 'Romantike', icon: HeartHandshake }
   ];
 
   // Search queries for different event types
   const getSearchQuery = (type) => {
     switch (type) {
       case 'music':
-        return 'live music concerts music venues bands';
+        return 'live music concerts music venues bands DJ';
       case 'nightlife':
-        return 'nightclubs bars pubs night entertainment';
+        return 'nightclubs bars pubs night entertainment lounge';
       case 'culture':
-        return 'theaters museums art galleries cultural centers';
+        return 'theaters museums cultural centers heritage sites';
+      case 'sports':
+        return 'sports stadium gym fitness center football basketball tennis';
+      case 'food':
+        return 'restaurants wine bar food festival tasting cooking class';
+      case 'comedy':
+        return 'comedy club stand up comedy show entertainment venue';
+      case 'cinema':
+        return 'cinema movie theater film screening';
+      case 'outdoor':
+        return 'hiking trails outdoor activities adventure park beach nature';
+      case 'art':
+        return 'art gallery exhibition museum contemporary art studio';
+      case 'wellness':
+        return 'spa wellness center yoga studio massage meditation retreat';
+      case 'festivals':
+        return 'festival fair carnival seasonal events market';
+      case 'romantic':
+        return 'romantic restaurant rooftop bar scenic viewpoint date night couples';
       default:
-        return 'events venues concert halls theaters nightclubs live music entertainment';
+        return 'events venues concert halls theaters nightclubs entertainment';
     }
   };
 
@@ -376,12 +580,22 @@ export default function Events() {
                 <ChevronRight className={`w-6 h-6 text-emerald-400/60 transition-transform duration-300 ${showAllFestive ? 'rotate-90' : ''}`} />
               </div>
               
-              {/* Bottom hint */}
-              <div className="mt-4 pt-3 border-t border-emerald-500/20">
+              {/* Bottom hint & See More Button */}
+              <div className="mt-4 pt-3 border-t border-emerald-500/20 space-y-3">
                 <p className="text-xs text-emerald-300/60 flex items-center gap-2">
                   <Sparkles className="w-3 h-3" />
                   Planifiko një takim special! Kliko për më shumë data festive.
                 </p>
+                
+                {/* See More Festive Dates Button */}
+                <Link
+                  to="/festive-dates"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 rounded-xl text-white font-semibold text-sm transition-all hover:scale-[1.02] shadow-lg shadow-emerald-500/30"
+                >
+                  <Calendar className="w-4 h-4" />
+                  Shiko më shumë data festive
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
               </div>
             </div>
           </div>
@@ -410,6 +624,16 @@ export default function Events() {
                   </div>
                 ))}
               </div>
+              
+              {/* See More Button */}
+              <Link
+                to="/festive-dates"
+                className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 hover:from-emerald-500/30 hover:to-cyan-500/30 border border-emerald-500/30 rounded-xl text-emerald-300 font-semibold transition-all hover:scale-[1.02]"
+              >
+                <Calendar className="w-4 h-4" />
+                Shiko të gjitha datat festive
+                <ChevronRight className="w-4 h-4" />
+              </Link>
             </div>
           )}
         </div>

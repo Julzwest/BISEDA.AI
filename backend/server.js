@@ -34,13 +34,13 @@ mongoose.connect(MONGODB_URI)
 // MongoDB User Schema
 const userAccountSchema = new mongoose.Schema({
   odId: { type: String, required: true, unique: true },
-  username: { type: String, required: true },
-  email: { type: String, required: true },
+  username: { type: String, required: true, unique: true, lowercase: true, trim: true },
+  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   password: { type: String },
   phoneNumber: { type: String },
   country: { type: String, default: 'AL' },
-  appleId: { type: String },
-  googleId: { type: String },
+  appleId: { type: String, sparse: true, unique: true },
+  googleId: { type: String, sparse: true, unique: true },
   isVerified: { type: Boolean, default: false },
   isBlocked: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
@@ -670,23 +670,32 @@ app.post('/api/auth/register', async (req, res) => {
       });
     }
     
-    // Check if user already exists in MongoDB
-    const existingUser = await UserAccountModel.findOne({
-      $or: [{ email: email }, { username: username }]
-    });
+    // Normalize email and username
+    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedUsername = username.toLowerCase().trim();
     
-    if (existingUser) {
+    // Check if email already exists
+    const existingEmail = await UserAccountModel.findOne({ email: normalizedEmail });
+    if (existingEmail) {
       return res.status(409).json({ 
-        error: 'User with this email or username already exists' 
+        error: 'Ky email është përdorur tashmë. Kyçu ose përdor email tjetër.' 
       });
     }
     
-    // Create new user account
+    // Check if username already exists
+    const existingUsername = await UserAccountModel.findOne({ username: normalizedUsername });
+    if (existingUsername) {
+      return res.status(409).json({ 
+        error: 'Ky username është marrë. Provo një tjetër.' 
+      });
+    }
+    
+    // Create new user account with unique ID
     const odId = appleId || `user-${Date.now()}-${Math.random().toString(36).substring(7)}`;
     const newUser = new UserAccountModel({
       odId,
-      username: username || `user_${Date.now()}`,
-      email,
+      username: normalizedUsername,
+      email: normalizedEmail,
       phoneNumber: phoneNumber || null,
       password: password || null, // In production, hash this!
       appleId: appleId || null,
@@ -1063,7 +1072,7 @@ app.post('/api/auth/apple', async (req, res) => {
         passwordHash: null, // No password for Apple users
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString(),
-        subscriptionTier: 'free',
+        subscriptionTier: 'free_trial', // 3-day free trial
         savedItems: { dates: [], gifts: [], tips: [] }
       };
       
@@ -1128,7 +1137,7 @@ app.post('/api/auth/google', async (req, res) => {
         passwordHash: null, // No password for Google users
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString(),
-        subscriptionTier: 'free',
+        subscriptionTier: 'free_trial', // 3-day free trial
         savedItems: { dates: [], gifts: [], tips: [] }
       };
       
@@ -1193,7 +1202,7 @@ app.post('/api/auth/facebook', async (req, res) => {
         passwordHash: null, // No password for Facebook users
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString(),
-        subscriptionTier: 'free',
+        subscriptionTier: 'free_trial', // 3-day free trial
         savedItems: { dates: [], gifts: [], tips: [] }
       };
       
@@ -1433,10 +1442,12 @@ app.get('/api/admin/stats', checkAdminAuth, (req, res) => {
     
     // Subscription breakdown
     const subscriptionStats = {
+      free_trial: allUsers.filter(u => u.subscriptionTier === 'free_trial').length,
       free: allUsers.filter(u => u.subscriptionTier === 'free').length,
       starter: allUsers.filter(u => u.subscriptionTier === 'starter').length,
       pro: allUsers.filter(u => u.subscriptionTier === 'pro').length,
-      premium: allUsers.filter(u => u.subscriptionTier === 'premium').length
+      elite: allUsers.filter(u => u.subscriptionTier === 'elite').length,
+      premium: allUsers.filter(u => u.subscriptionTier === 'premium').length // Legacy support
     };
     
     // Revenue calculation (rough estimate)

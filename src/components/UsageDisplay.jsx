@@ -56,7 +56,12 @@ export default function UsageDisplay({ onUpgrade, onLimitReached }) {
         <div className="flex items-center gap-2">
           <Zap className="w-5 h-5 text-amber-400" />
           <h3 className="text-sm font-semibold text-white">
-            {tier === 'free' ? 'Plan Falas' : tier === 'starter' ? 'Plan Starter' : tier === 'pro' ? 'Plan Pro' : tier === 'premium' ? 'Plan Premium' : 'Plan Bazë'}
+            {tier === 'free_trial' ? 'Provë Falas' : 
+             tier === 'free' ? 'Plan Falas' : 
+             tier === 'starter' ? 'Plan Starter (€6.99)' : 
+             tier === 'pro' ? 'Plan Pro (€12.99)' : 
+             tier === 'elite' ? 'Plan Elite (€19.99)' : 
+             tier === 'premium' ? 'Plan Elite' : 'Plan Bazë'}
           </h3>
         </div>
         <div className="flex gap-2">
@@ -69,13 +74,13 @@ export default function UsageDisplay({ onUpgrade, onLimitReached }) {
               Bli Kredite
             </Button>
           )}
-          {(tier === 'free' || tier === 'starter' || tier === 'pro') && (
+          {(tier === 'free_trial' || tier === 'free' || tier === 'starter' || tier === 'pro') && (
             <Button
               onClick={onUpgrade}
               size="sm"
               className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white text-xs h-7 px-3"
             >
-              {tier === 'free' ? 'Përmirëso' : 'Përmirëso Më Shumë'}
+              {(tier === 'free_trial' || tier === 'free') ? 'Përmirëso' : 'Përmirëso Më Shumë'}
             </Button>
           )}
         </div>
@@ -119,7 +124,7 @@ export default function UsageDisplay({ onUpgrade, onLimitReached }) {
           </div>
         )}
 
-        {isNearLimit && !isAtLimit && tier === 'free' && (
+        {isNearLimit && !isAtLimit && (tier === 'free' || tier === 'free_trial') && (
           <div className="mt-2 p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg">
             <p className="text-xs text-amber-400 text-center">
               Pothuajse në limitin tënd! Përmirëso për mesazhe të pakufizuara.

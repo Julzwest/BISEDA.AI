@@ -311,22 +311,26 @@ export default function Admin() {
               <Crown className="w-5 h-5 text-yellow-400" />
               Subscription Breakdown
             </h2>
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-5 gap-4">
+              <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-xl">
+                <p className="text-emerald-300 text-sm mb-1">Provë Falas</p>
+                <p className="text-white text-2xl font-bold">{stats.subscriptions.free_trial || 0}</p>
+              </div>
               <div className="bg-slate-700/50 p-4 rounded-xl">
                 <p className="text-slate-400 text-sm mb-1">Free</p>
                 <p className="text-white text-2xl font-bold">{stats.subscriptions.free}</p>
               </div>
               <div className="bg-blue-500/10 border border-blue-500/30 p-4 rounded-xl">
-                <p className="text-blue-300 text-sm mb-1">Starter (€7.99)</p>
+                <p className="text-blue-300 text-sm mb-1">Starter (€6.99)</p>
                 <p className="text-white text-2xl font-bold">{stats.subscriptions.starter}</p>
               </div>
               <div className="bg-purple-500/10 border border-purple-500/30 p-4 rounded-xl">
-                <p className="text-purple-300 text-sm mb-1">Pro (€14.99)</p>
+                <p className="text-purple-300 text-sm mb-1">Pro (€12.99)</p>
                 <p className="text-white text-2xl font-bold">{stats.subscriptions.pro}</p>
               </div>
               <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl">
-                <p className="text-amber-300 text-sm mb-1">Premium (€24.99)</p>
-                <p className="text-white text-2xl font-bold">{stats.subscriptions.premium}</p>
+                <p className="text-amber-300 text-sm mb-1">Elite (€19.99)</p>
+                <p className="text-white text-2xl font-bold">{stats.subscriptions.elite || stats.subscriptions.premium || 0}</p>
               </div>
             </div>
           </Card>
@@ -344,12 +348,13 @@ export default function Admin() {
                     <span className="text-slate-400 font-mono text-sm w-6">#{index + 1}</span>
                     <span className="text-white font-mono text-sm">{user.userId.substring(0, 20)}...</span>
                     <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                      user.tier === 'premium' ? 'bg-amber-500/20 text-amber-300' :
+                      user.tier === 'elite' || user.tier === 'premium' ? 'bg-amber-500/20 text-amber-300' :
                       user.tier === 'pro' ? 'bg-purple-500/20 text-purple-300' :
                       user.tier === 'starter' ? 'bg-blue-500/20 text-blue-300' :
+                      user.tier === 'free_trial' ? 'bg-emerald-500/20 text-emerald-300' :
                       'bg-slate-500/20 text-slate-300'
                     }`}>
-                      {user.tier}
+                      {user.tier === 'free_trial' ? 'Trial' : user.tier}
                     </span>
                   </div>
                   <div className="flex items-center gap-4">
@@ -377,12 +382,13 @@ export default function Admin() {
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-white font-mono text-sm">{user.userId}</span>
                     <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                      user.subscriptionTier === 'premium' ? 'bg-amber-500/20 text-amber-300' :
+                      user.subscriptionTier === 'elite' || user.subscriptionTier === 'premium' ? 'bg-amber-500/20 text-amber-300' :
                       user.subscriptionTier === 'pro' ? 'bg-purple-500/20 text-purple-300' :
                       user.subscriptionTier === 'starter' ? 'bg-blue-500/20 text-blue-300' :
+                      user.subscriptionTier === 'free_trial' ? 'bg-emerald-500/20 text-emerald-300' :
                       'bg-slate-500/20 text-slate-300'
                     }`}>
-                      {user.subscriptionTier}
+                      {user.subscriptionTier === 'free_trial' ? 'Trial' : user.subscriptionTier}
                     </span>
                     {user.isBlocked && (
                       <span className="px-2 py-0.5 bg-red-500/20 text-red-300 rounded text-xs font-semibold">

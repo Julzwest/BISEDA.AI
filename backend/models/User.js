@@ -4,17 +4,26 @@
 class User {
   constructor(userId) {
     this.userId = userId;
-    this.subscriptionTier = 'free'; // 'free', 'basic', 'premium'
-    this.subscriptionStatus = 'active'; // 'active', 'cancelled', 'expired'
+    this.subscriptionTier = 'free_trial'; // 'free_trial', 'free', 'starter', 'pro', 'elite'
+    this.subscriptionStatus = 'active'; // 'active', 'cancelled', 'expired', 'trial'
     this.subscriptionExpiresAt = null;
     this.stripeCustomerId = null;
     this.stripeSubscriptionId = null;
     this.createdAt = new Date();
     this.lastActiveAt = new Date();
     
+    // Free trial tracking
+    this.trialStartedAt = new Date();
+    this.trialDaysAllowed = 3; // 3-day free trial
+    this.trialUsed = true; // Mark trial as used on account creation
+    
     // Security tracking
     this.securityStrikes = 0; // Track security violations
     this.isBlocked = false; // Block status
+    
+    // Device fingerprint for abuse prevention
+    this.deviceFingerprint = null;
+    this.registrationIP = null;
     
     // Usage tracking (daily reset)
     this.dailyUsage = {
@@ -50,6 +59,31 @@ class User {
     // Credits system
     this.credits = 0;
     this.creditHistory = [];
+  }
+  
+  // Check if free trial is still valid (3 days)
+  isTrialValid() {
+    if (this.subscriptionTier !== 'free_trial') return false;
+    const trialEndDate = new Date(this.trialStartedAt);
+    trialEndDate.setDate(trialEndDate.getDate() + this.trialDaysAllowed);
+    return new Date() < trialEndDate;
+  }
+  
+  // Get trial days remaining
+  getTrialDaysRemaining() {
+    if (this.subscriptionTier !== 'free_trial') return 0;
+    const trialEndDate = new Date(this.trialStartedAt);
+    trialEndDate.setDate(trialEndDate.getDate() + this.trialDaysAllowed);
+    const remaining = Math.ceil((trialEndDate - new Date()) / (1000 * 60 * 60 * 24));
+    return Math.max(0, remaining);
+  }
+  
+  // Expire trial and convert to limited free
+  expireTrial() {
+    if (this.subscriptionTier === 'free_trial') {
+      this.subscriptionTier = 'free';
+      this.subscriptionStatus = 'expired';
+    }
   }
   
   // Calculate cost from token usage (OpenAI pricing: gpt-4o-mini)
@@ -207,44 +241,76 @@ class User {
     return Math.max(0, this.screenshotAnalyses.freeLimit - this.screenshotAnalyses.totalUsed);
   }
 
-  // Get subscription limits (OPTIMIZED FOR PROFITABILITY)
+  // Get subscription limits (NEW PRICING - €6.99/€12.99/€19.99)
   getLimits() {
+    // Check if trial has expired
+    if (this.subscriptionTier === 'free_trial' && !this.isTrialValid()) {
+      this.expireTrial();
+    }
+    
     switch (this.subscriptionTier) {
-      case 'free':
+      case 'free_trial':
+        // 3-day free trial: 10 messages/day, no adult content
         return {
-          messagesPerDay: 5, // Reduced from 10 to reduce costs
+          messagesPerDay: 10,
           imageAnalysesPerDay: 0,
-          adultContent: false
+          adultContent: false,
+          isTrial: true,
+          trialDaysRemaining: this.getTrialDaysRemaining()
+        };
+      case 'free':
+        // After trial expires: very limited (encourages upgrade)
+        return {
+          messagesPerDay: 3, // Very limited to encourage upgrade
+          imageAnalysesPerDay: 0,
+          adultContent: false,
+          isTrial: false
         };
       case 'starter':
+        // €6.99/month - Entry tier
         return {
-          messagesPerDay: 50,
+          messagesPerDay: 75,
           imageAnalysesPerDay: 0,
-          adultContent: true
-        };
-      case 'basic':
-        return {
-          messagesPerDay: 100, // Legacy tier
-          imageAnalysesPerDay: 0,
-          adultContent: true
+          adultContent: true,
+          isTrial: false
         };
       case 'pro':
+        // €12.99/month - Most Popular
         return {
           messagesPerDay: 200,
-          imageAnalysesPerDay: 20,
-          adultContent: true
+          imageAnalysesPerDay: 30,
+          adultContent: true,
+          isTrial: false
+        };
+      case 'elite':
+        // €19.99/month - Premium tier
+        return {
+          messagesPerDay: 500,
+          imageAnalysesPerDay: 100,
+          adultContent: true,
+          isTrial: false
+        };
+      // Legacy tiers (for existing users)
+      case 'basic':
+        return {
+          messagesPerDay: 75, // Map to starter limits
+          imageAnalysesPerDay: 0,
+          adultContent: true,
+          isTrial: false
         };
       case 'premium':
         return {
-          messagesPerDay: 1000, // Increased cap
+          messagesPerDay: 500, // Map to elite limits
           imageAnalysesPerDay: 100,
-          adultContent: true
+          adultContent: true,
+          isTrial: false
         };
       default:
         return {
-          messagesPerDay: 5,
+          messagesPerDay: 3,
           imageAnalysesPerDay: 0,
-          adultContent: false
+          adultContent: false,
+          isTrial: false
         };
     }
   }

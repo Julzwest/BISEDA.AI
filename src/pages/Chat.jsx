@@ -470,7 +470,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex flex-col px-6 pt-20 pb-32" style={{ minHeight: '100vh' }}>
+    <div className="flex flex-col px-6 pt-4 pb-52" style={{ minHeight: 'calc(100vh - 60px)' }}>
       {/* Chat History Sidebar */}
       {showHistory && (
         <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm animate-fadeIn" onClick={() => setShowHistory(false)}>
@@ -674,9 +674,15 @@ export default function Chat() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
-      <div className="mt-auto pt-4">
-        <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+      {/* Input Area - Fixed at bottom */}
+      <div 
+        className="fixed left-0 right-0 px-4 z-50"
+        style={{ 
+          bottom: '80px', // Above the navigation bar
+          maxWidth: '100%'
+        }}
+      >
+        <Card className="bg-slate-800/95 border-slate-700 backdrop-blur-md shadow-2xl shadow-black/50 max-w-4xl mx-auto">
           <div className="p-4">
             {/* Image Preview */}
             {selectedImages.length > 0 && (

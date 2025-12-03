@@ -13,6 +13,22 @@ export default function Layout({ children, onLogout }) {
   const currentPageName = location.pathname.split('/')[1]?.charAt(0).toUpperCase() + location.pathname.split('/')[1]?.slice(1) || 'Home';
   const isGuest = localStorage.getItem('isGuest') === 'true';
 
+  // Scroll to top on route change
+  useEffect(() => {
+    // Scroll window to top
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    
+    // Also scroll the main container
+    const mainContainer = document.getElementById('main-content');
+    if (mainContainer) {
+      mainContainer.scrollTo({ top: 0, behavior: 'instant' });
+    }
+    
+    // Force scroll on document element and body
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [location.pathname]);
+
   // Track page views
   useEffect(() => {
     trackPageView(currentPageName);
@@ -141,9 +157,12 @@ export default function Layout({ children, onLogout }) {
       </header>
       
       {/* Main Content - with top padding for fixed header */}
-      <div style={{ paddingTop: '60px', paddingBottom: '90px' }}>
+      <main 
+        id="main-content"
+        style={{ paddingTop: '60px', paddingBottom: '90px', minHeight: '100vh' }}
+      >
         {children}
-      </div>
+      </main>
 
       {/* Fixed Bottom Navigation - Modern Design */}
       <nav style={{ 

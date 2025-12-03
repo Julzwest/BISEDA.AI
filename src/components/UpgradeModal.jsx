@@ -10,29 +10,30 @@ export default function UpgradeModal({ isOpen, onClose, onSelectPlan }) {
   const plans = [
     {
       name: 'Starter',
-      price: '€7.99',
+      tier: 'starter',
+      price: '€6.99',
       period: 'month',
       priceId: import.meta.env.VITE_STRIPE_STARTER_PRICE_ID,
       features: [
-        '50 mesazhe në ditë',
-        'Të gjitha kategoritë (përfshirë të rritur)',
-        'Biseda Chat (kopjo/ngjite)',
-        'Biseda me AI Coach',
-        'Sugjerime takimesh të para',
-        'Këshilla & tips'
+        '75 mesazhe në ditë',
+        'Të gjitha kategoritë',
+        'Përmbajtje për të rritur',
+        'Biseda AI Coach',
+        'Këshilla & tips dating'
       ],
       color: 'from-blue-500 to-cyan-600',
       popular: false
     },
     {
       name: 'Pro',
-      price: '€14.99',
+      tier: 'pro',
+      price: '€12.99',
       period: 'month',
       priceId: import.meta.env.VITE_STRIPE_PRO_PRICE_ID,
       features: [
         '200 mesazhe në ditë',
         'Gjithçka nga Starter',
-        'Analizë imazhi (screenshot)',
+        '30 analiza imazhesh/ditë',
         'Përgjigje AI të avancuara',
         'Mbështetje prioritare'
       ],
@@ -40,15 +41,16 @@ export default function UpgradeModal({ isOpen, onClose, onSelectPlan }) {
       popular: true
     },
     {
-      name: 'Premium',
-      price: '€24.99',
+      name: 'Elite',
+      tier: 'elite',
+      price: '€19.99',
       period: 'month',
-      priceId: import.meta.env.VITE_STRIPE_PREMIUM_PRICE_ID,
+      priceId: import.meta.env.VITE_STRIPE_ELITE_PRICE_ID,
       features: [
-        'Mesazhe të pakufizuara (1000/ditë maksimum)',
+        '500 mesazhe në ditë',
         'Gjithçka nga Pro',
-        'Personalitet AI i avancuar',
-        'Mbështetje prioritare',
+        '100 analiza imazhesh/ditë',
+        'Mbështetje VIP 24/7',
         'Akses i hershëm në veçori të reja'
       ],
       color: 'from-amber-500 to-orange-600',

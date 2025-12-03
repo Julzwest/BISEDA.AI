@@ -12,9 +12,10 @@ import Events from './pages/Events.jsx';
 import SubscriptionSuccess from './pages/SubscriptionSuccess.jsx';
 import SubscriptionCancel from './pages/SubscriptionCancel.jsx';
 import Admin from './pages/Admin.jsx';
-import Auth from './pages/Auth.jsx';
+import Auth, { clearAllUserData } from './pages/Auth.jsx';
 import UserProfile from './pages/UserProfile.jsx';
 import OnboardingTutorial from './components/OnboardingTutorial.jsx';
+import ScrollToTop from './components/ScrollToTop.jsx';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -57,11 +58,10 @@ function App() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userName');
+    // Clear ALL user data to prevent profile confusion
+    clearAllUserData();
     setIsAuthenticated(false);
+    setIsGuest(false);
   };
 
   // Show loading while checking auth
@@ -84,6 +84,9 @@ function App() {
   // Show main app if authenticated
   return (
     <Router>
+      {/* Scroll to top on route change */}
+      <ScrollToTop />
+      
       {/* Onboarding Tutorial */}
       {showOnboarding && (
         <OnboardingTutorial 

@@ -172,7 +172,7 @@ const getFromIndexedDB = async (key) => {
 
 // Guest usage tracking
 const GUEST_USAGE_KEY = '_guestUsage';
-const MAX_GUEST_MESSAGES = 10; // Limit for free guest messages
+const MAX_GUEST_MESSAGES = 5; // Limit for free guest messages - keeps cost low while showing value
 
 export const getGuestUsage = async () => {
   const fingerprint = await getDeviceFingerprint();
