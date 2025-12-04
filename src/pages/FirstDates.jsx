@@ -432,7 +432,7 @@ Mos shtoni tekst tjetër, VETËM JSON.`;
   };
 
   return (
-    <div className="px-6 pt-20 pb-32 bg-gradient-to-b from-slate-950 via-purple-950/20 to-slate-950">
+    <div className="px-4 pt-6 pb-32 bg-gradient-to-b from-slate-950 via-purple-950/20 to-slate-950 w-full max-w-full overflow-x-hidden">
       {/* Header */}
       <div className="mb-6 text-center">
         <div className="inline-block mb-3">

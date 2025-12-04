@@ -65,9 +65,9 @@ export default function Home() {
 
 
   return (
-    <div>
+    <div className="w-full overflow-x-hidden">
       {/* Hero Section */}
-      <div className="px-6 pt-20 pb-6">
+      <div className="px-4 pt-6 pb-6 w-full max-w-full">
         <div className="text-center mb-6">
           {/* Logo - Speech bubbles representing conversation */}
           <div className="inline-block mb-5 relative">
@@ -113,14 +113,14 @@ export default function Home() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-3 gap-2 mb-6 w-full">
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <Card key={index} className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-slate-700/50 backdrop-blur-sm p-3 text-center hover:border-purple-500/50 transition-all hover:scale-105">
-                <Icon className="w-5 h-5 mx-auto mb-1.5 text-purple-400" />
-                <div className="text-xl font-bold text-white mb-0.5">{stat.value}</div>
-                <div className="text-xs text-slate-400 leading-tight">{stat.label}</div>
+              <Card key={index} className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-slate-700/50 backdrop-blur-sm p-2 text-center hover:border-purple-500/50 transition-all">
+                <Icon className="w-4 h-4 mx-auto mb-1 text-purple-400" />
+                <div className="text-lg font-bold text-white mb-0.5">{stat.value}</div>
+                <div className="text-[10px] text-slate-400 leading-tight truncate">{stat.label}</div>
               </Card>
             );
           })}

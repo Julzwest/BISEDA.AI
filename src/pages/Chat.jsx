@@ -470,7 +470,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex flex-col px-6 pt-4 pb-52" style={{ minHeight: 'calc(100vh - 60px)' }}>
+    <div className="flex flex-col px-4 pt-2 pb-52 w-full max-w-full overflow-x-hidden" style={{ minHeight: 'calc(100vh - 60px)' }}>
       {/* Chat History Sidebar */}
       {showHistory && (
         <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm animate-fadeIn" onClick={() => setShowHistory(false)}>
@@ -676,14 +676,14 @@ export default function Chat() {
 
       {/* Input Area - Fixed at bottom */}
       <div 
-        className="fixed left-0 right-0 px-4 z-50"
+        className="fixed left-0 right-0 px-3 z-50"
         style={{ 
-          bottom: '80px', // Above the navigation bar
+          bottom: '100px', // Above the navigation bar with extra space
           maxWidth: '100%'
         }}
       >
         <Card className="bg-slate-800/95 border-slate-700 backdrop-blur-md shadow-2xl shadow-black/50 max-w-4xl mx-auto">
-          <div className="p-4">
+          <div className="p-3">
             {/* Image Preview */}
             {selectedImages.length > 0 && (
               <div className="mb-3 flex flex-wrap gap-2">
@@ -780,21 +780,7 @@ export default function Chat() {
                 <Send className="w-5 h-5" />
               </Button>
             </div>
-            <p className="text-xs text-slate-400 mt-2">
-              Shtyp Enter për të dërguar, Shift+Enter për rresht të ri
-              {selectedImages.length > 0 && ` • ${selectedImages.length}/4 foto të zgjedhura`}
-            </p>
-            {/* Screenshot analysis info */}
-            {usage?.tier === 'free' && (
-              <p className="text-xs mt-1 flex items-center gap-1">
-                <span className="text-purple-400">📸</span>
-                <span className={screenshotUsage.remaining === 0 ? 'text-red-400' : 'text-green-400'}>
-                  {screenshotUsage.remaining === 0 
-                    ? 'Ke përdorur 2 analiza falas - Përmirëso për më shumë!'
-                    : `${screenshotUsage.remaining}/2 analiza screenshot falas`}
-                </span>
-              </p>
-            )}
+            {/* Helper text - hidden on mobile */}
           </div>
         </Card>
       </div>

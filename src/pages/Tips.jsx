@@ -253,7 +253,7 @@ Përgjigju në shqip duke u bazuar në kontekstin e mëparshëm. Jep këshilla t
   };
 
   return (
-    <div className="px-6 pt-20 pb-32">
+    <div className="px-4 pt-6 pb-32 w-full max-w-full overflow-x-hidden">
       {/* Header - Centered like other pages */}
       <div className="mb-6 text-center">
         <div className="inline-block mb-3">

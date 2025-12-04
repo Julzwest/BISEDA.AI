@@ -112,14 +112,14 @@ export default function Layout({ children, onLogout }) {
           top: 0, 
           left: 0, 
           right: 0, 
-          height: '60px',
+          paddingTop: 'env(safe-area-inset-top, 0px)',
           zIndex: 9999,
           background: 'linear-gradient(to bottom, var(--bg-primary, rgba(15, 23, 42, 0.98)), var(--bg-primary, rgba(15, 23, 42, 0.95)))',
           backdropFilter: 'blur(12px)',
           borderBottom: '1px solid var(--border-color, rgba(148, 163, 184, 0.1))'
         }}
       >
-        <div className="h-full px-4 flex items-center justify-between max-w-screen-xl mx-auto">
+        <div className="h-14 px-4 flex items-center justify-between max-w-screen-xl mx-auto">
           {/* Left side - Logo/Brand */}
           <div className="flex items-center">
             <Link to="/home" className="flex items-center gap-2">
@@ -156,10 +156,11 @@ export default function Layout({ children, onLogout }) {
         </div>
       </header>
       
-      {/* Main Content - with top padding for fixed header */}
+      {/* Main Content - with top padding for fixed header + safe area */}
       <main 
         id="main-content"
-        style={{ paddingTop: '60px', paddingBottom: '90px', minHeight: '100vh' }}
+        className="w-full max-w-full overflow-x-hidden"
+        style={{ paddingTop: 'calc(56px + env(safe-area-inset-top, 0px))', paddingBottom: '90px', minHeight: '100vh' }}
       >
         {children}
       </main>
