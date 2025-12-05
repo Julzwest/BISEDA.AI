@@ -1,11 +1,15 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { X, Check, Zap, Sparkles } from 'lucide-react';
+import { X, Check, Zap, Sparkles, ExternalLink } from 'lucide-react';
 import { getBackendUrl } from '@/utils/getBackendUrl';
+import { Capacitor } from '@capacitor/core';
 
 export default function UpgradeModal({ isOpen, onClose, onSelectPlan }) {
   if (!isOpen) return null;
+  
+  // Check if running on iOS native app
+  const isNativeIOS = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios';
 
   const plans = [
     {
@@ -59,6 +63,12 @@ export default function UpgradeModal({ isOpen, onClose, onSelectPlan }) {
   ];
 
   const handleSelectPlan = async (plan) => {
+    // For iOS native app, redirect to website for subscription
+    if (isNativeIOS) {
+      window.open('https://bisedaai.com/#/home', '_blank');
+      return;
+    }
+    
     try {
       const backendUrl = getBackendUrl();
       const response = await fetch(`${backendUrl}/api/stripe/create-checkout-session`, {
@@ -87,7 +97,6 @@ export default function UpgradeModal({ isOpen, onClose, onSelectPlan }) {
     } catch (error) {
       console.error('Error:', error);
       console.error('Price ID:', plan.priceId);
-      console.error('Backend URL:', backendUrl);
       alert(`Ndodhi një gabim: ${error.message}. Kontrollo konsolën për më shumë detaje.`);
     }
   };
@@ -161,7 +170,13 @@ export default function UpgradeModal({ isOpen, onClose, onSelectPlan }) {
                         : 'bg-slate-600 hover:bg-slate-500'
                     } text-white font-semibold h-11`}
                   >
-                    Zgjidh {plan.name}
+                    {isNativeIOS ? (
+                      <span className="flex items-center gap-2">
+                        Abonohu në Web <ExternalLink className="w-4 h-4" />
+                      </span>
+                    ) : (
+                      `Zgjidh ${plan.name}`
+                    )}
                   </Button>
                 </div>
               </Card>
@@ -170,7 +185,10 @@ export default function UpgradeModal({ isOpen, onClose, onSelectPlan }) {
 
           <div className="text-center">
             <p className="text-xs text-slate-500">
-              Pagesë e sigurt me Stripe. Anulo kur të duash.
+              {isNativeIOS 
+                ? 'Për të abonuar, vizito bisedaai.com nga browseri yt.'
+                : 'Pagesë e sigurt me Stripe. Anulo kur të duash.'
+              }
             </p>
           </div>
         </div>

@@ -14,6 +14,7 @@ import SubscriptionCancel from './pages/SubscriptionCancel.jsx';
 import Admin from './pages/Admin.jsx';
 import Auth, { clearAllUserData } from './pages/Auth.jsx';
 import UserProfile from './pages/UserProfile.jsx';
+import PrivacyPolicy from './pages/PrivacyPolicy.jsx';
 import OnboardingTutorial from './components/OnboardingTutorial.jsx';
 import ScrollToTop from './components/ScrollToTop.jsx';
 
@@ -76,9 +77,24 @@ function App() {
     );
   }
 
-  // Show auth page if not authenticated
-  if (!isAuthenticated) {
+  // Check if current URL is privacy policy (allow access without auth)
+  const isPrivacyPage = window.location.hash.includes('privacy');
+  
+  // Show auth page if not authenticated (except for privacy policy)
+  if (!isAuthenticated && !isPrivacyPage) {
     return <Auth onAuthSuccess={handleAuthSuccess} />;
+  }
+  
+  // Show privacy policy without auth
+  if (!isAuthenticated && isPrivacyPage) {
+    return (
+      <Router>
+        <Routes>
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="*" element={<Navigate to="/privacy" replace />} />
+        </Routes>
+      </Router>
+    );
   }
 
   // Show main app if authenticated
@@ -110,6 +126,7 @@ function App() {
           <Route path="/subscription/cancel" element={<SubscriptionCancel />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/profile" element={<UserProfile onLogout={handleLogout} />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
         </Routes>
       </Layout>
     </Router>
